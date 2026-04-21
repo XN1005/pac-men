@@ -1,9 +1,5 @@
 package pacMen.map;
 
-public 
-
-
-
-{
+public class TileType {
     
 }

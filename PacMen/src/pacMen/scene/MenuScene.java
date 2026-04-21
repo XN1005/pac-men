@@ -1,7 +1,5 @@
 package pacMen.scene;
 
-public 
-
-{
+public class MenuScene {
     
 }

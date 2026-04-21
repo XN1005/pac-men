@@ -1,11 +1,5 @@
 package pacMen.entities;
 
-public 
-
-
-
-
-
-{
+public class Player {
     
 }
