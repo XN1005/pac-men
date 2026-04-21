@@ -1,5 +1,8 @@
 package pacMen.entities;
 
-public class abstractBase_Entity {
-    
+public abstract class abstractBase_Entity {
+    protected int x, y;
+
+    public abstract void update();
+    public abstract void render();
 }
