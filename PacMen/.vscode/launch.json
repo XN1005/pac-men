@@ -9,7 +9,7 @@
       "name": "Launch App",
       "request": "launch",
       "mainClass": "pacMen.Main",
-      "vmArgs": "--module-path ../openjfx-21.0.11_windows-x64_bin-sdk/javafx-sdk-21.0.11/lib --add-modules javafx.controls,javafx.fxml"
+      "vmArgs": "--module-path ../javaFX21/javafx-sdk-21.0.11/lib --add-modules javafx.controls,javafx.fxml"
     }
   ]
 }

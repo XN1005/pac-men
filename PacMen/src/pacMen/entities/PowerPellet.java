@@ -1,0 +1,6 @@
+package pacMen.entities;
+
+public 
+ {
+    
+}
