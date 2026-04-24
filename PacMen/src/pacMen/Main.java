@@ -6,35 +6,41 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
-import javafx.scene.paint.Color;
 import javafx.animation.AnimationTimer;
-import javafx.scene.shape.Circle;
+
+import pacMen.entities.Pellet;
+import pacMen.entities.Player;
 
 import java.util.*;
 
 public class Main extends Application {
 
-    // store keys pressed as a hashset
-    private Set<KeyCode> keysPressed = new HashSet<>();
-
     // EXAMPLE CODE FOR TESTING PURPOSES, LIKELY NOT IMPLENTED IN THE FUTURE
     @Override
-    public void start(Stage stage) {
-        Circle player = new Circle(10, Color.YELLOW);
-        player.setCenterX(400);
-        player.setCenterY(300);        
+    public void start(Stage stage) throws Exception {
+        // ----- 1. PLAYER -------------------------------
+        Set<KeyCode> keysPressed = new HashSet<>();
+
+        Player p1 = new Player(3, 1);
+        Player p2 = new Player(3, 2);
+        Pellet pel1 = new Pellet();
+        p1.setInput(keysPressed);
+        p2.setInput(keysPressed);
 
         // Simple UI element
         Label label = new Label("Pac-Men is running!");
         
         // Root layout
         Pane root = new Pane();
+        root.setStyle("-fx-background-color: black;");
         root.getChildren().add(label);
 
-        root.getChildren().add(player);
+        root.getChildren().add(pel1.sprite);
+        root.getChildren().add(p1.sprite);
+        root.getChildren().add(p2.sprite);
 
         // Scene
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root, 600, 800);
 
         // Input Handling
         scene.setOnKeyPressed(e -> keysPressed.add(e.getCode()));
@@ -44,27 +50,8 @@ public class Main extends Application {
         // Movement Handling
         AnimationTimer gameLoop = new AnimationTimer() {
             public void handle(long now) {
-
-                double speed = 1.5;
-
-                // Set player movement; Restrict movement to either Vertical or Horizontal (no Diagonal)
-                // Placeholder Commands, will fix accordingly to conform to 2D Arrays
-                if (keysPressed.contains(KeyCode.W) || keysPressed.contains(KeyCode.S)) {
-                    if (keysPressed.contains(KeyCode.W)) {
-                        player.setCenterY(player.getCenterY() - speed);
-                    }
-                    if (keysPressed.contains(KeyCode.S)) {
-                        player.setCenterY(player.getCenterY() + speed);
-                    }      
-                }
-                else {
-                    if (keysPressed.contains(KeyCode.A)) {
-                        player.setCenterX(player.getCenterX() - speed);
-                    }            
-                    if (keysPressed.contains(KeyCode.D)) {
-                        player.setCenterX(player.getCenterX() + speed);
-                    }
-                }   
+                p1.update();
+                p2.update();
             }
         };
 
