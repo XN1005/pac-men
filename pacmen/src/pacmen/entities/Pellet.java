@@ -7,7 +7,7 @@ public class Pellet implements Collision {
     public String state;
     public Circle sprite;
 
-    public Pellet() {
+    public Pellet(double x, double y) {
         this.state = "ACTIVE";
         this.sprite = new Circle(5, Color.BEIGE);
         this.sprite.setCenterX(100);
@@ -38,5 +38,4 @@ public class Pellet implements Collision {
     public void collidePlayer() {
         state = "CONSUMED";
     }
-
 }
