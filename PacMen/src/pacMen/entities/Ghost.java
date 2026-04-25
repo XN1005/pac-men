@@ -1,4 +1,4 @@
-package pacMen.entities;
+package pacmen.entities;
 
 public class Ghost {
     

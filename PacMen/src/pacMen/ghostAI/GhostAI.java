@@ -1,4 +1,4 @@
-package pacMen.ghostAI;
+package pacmen.ghostai;
 
 public class GhostAI {
     

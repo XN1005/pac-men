@@ -1,9 +1,9 @@
-package pacMen.entities;
+package pacmen.entities;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import java.util.Set;
 import javafx.scene.shape.Circle;
-import pacMen.behaviorComponents.Collision;
+import pacmen.behaviorcomponents.Collision;
 
 public class Player extends abstractBase_Entity implements Collision {
     public Circle sprite;

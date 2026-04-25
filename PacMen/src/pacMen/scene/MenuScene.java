@@ -1,4 +1,4 @@
-package pacMen.scene;
+package pacmen.scene;
 
 public class MenuScene {
     

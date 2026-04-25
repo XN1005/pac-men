@@ -8,7 +8,7 @@
       "type": "java",
       "name": "Launch App",
       "request": "launch",
-      "mainClass": "pacMen.Main",
+      "mainClass": "pacmen.Main",
       "vmArgs": "--module-path ../javaFX21/javafx-sdk-21.0.11/lib --add-modules javafx.controls,javafx.fxml"
     }
   ]

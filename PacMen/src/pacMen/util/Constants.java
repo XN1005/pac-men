@@ -1,4 +1,4 @@
-package pacMen.util;
+package pacmen.util;
 
 public class Constants {
     

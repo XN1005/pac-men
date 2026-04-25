@@ -1,4 +1,4 @@
-package pacMen.map;
+package pacmen.map;
 
 public class MapLoader {
     

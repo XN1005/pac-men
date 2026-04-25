@@ -1,4 +1,4 @@
-package pacMen.core;
+package pacmen.core;
 
 public class Config {
     

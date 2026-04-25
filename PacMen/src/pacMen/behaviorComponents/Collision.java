@@ -1,4 +1,4 @@
-package pacMen.behaviorComponents;
+package pacmen.behaviorcomponents;
 
 public interface Collision {
     public void consumePellet();

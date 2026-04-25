@@ -1,4 +1,4 @@
-package pacMen.entities;
+package pacmen.entities;
 
 public abstract class abstractBase_Entity {
     protected int x, y;

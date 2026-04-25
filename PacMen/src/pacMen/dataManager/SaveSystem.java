@@ -1,4 +1,4 @@
-package pacMen.dataManager;
+package pacmen.datamanager;
 
 public class SaveSystem {
     

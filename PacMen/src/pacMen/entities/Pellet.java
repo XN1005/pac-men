@@ -1,7 +1,7 @@
-package pacMen.entities;
+package pacmen.entities;
 import javafx.scene.shape.Circle;
+import pacmen.behaviorcomponents.Collision;
 import javafx.scene.paint.Color;
-import pacMen.behaviorComponents.Collision;
 
 public class Pellet implements Collision {
     public String state;

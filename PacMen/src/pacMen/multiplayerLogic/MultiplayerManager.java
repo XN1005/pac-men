@@ -1,5 +1,5 @@
-package pacMen.multiplayerLogic;
-import pacMen.entities.Player;
+package pacmen.multiplayerlogic;
+import pacmen.entities.Player;
 
 public class MultiplayerManager {
     public Player p1;

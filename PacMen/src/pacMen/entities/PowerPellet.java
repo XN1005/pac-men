@@ -1,4 +1,4 @@
-package pacMen.entities;
+package pacmen.entities;
 
 public class PowerPellet extends Pellet {
     public String state;

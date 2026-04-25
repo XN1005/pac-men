@@ -1,4 +1,4 @@
-package pacMen.userInterface;
+package pacmen.userinterface;
 
 public class ScoreBoard {
     
