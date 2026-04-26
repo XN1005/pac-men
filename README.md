@@ -22,7 +22,7 @@ In action:
     // some code in between
     gameMap = new GameMap();
     ```
- - Calls MapLoader to load map data to the created map:
+ - Then, it calls MapLoader to load map data to the created map:
     ```java
     MapLoader.loadMap(gameMap, "resources\\maps\\level1.txt");
     ```
