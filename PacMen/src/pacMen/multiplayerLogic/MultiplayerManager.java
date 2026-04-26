@@ -24,7 +24,7 @@ public class MultiplayerManager {
         }
         else { // NO DEATHS YET
             // if time out, whoever gains more points win, if draw, then it's a rematch.
-            if (p1.score > p2.score && timer == 10000) {
+            if (p1.score > p2.score && timer >= 10000) {
                 System.out.println("P1 WINS!");
             }
             else if (p1.score < p2.score) {
@@ -35,5 +35,4 @@ public class MultiplayerManager {
             }
         }
     }
-
 }
