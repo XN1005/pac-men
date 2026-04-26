@@ -22,25 +22,24 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        // ----- 1. MAP INITIALIZATION ---------------------------
+        // map initialization
         gameMap = new GameMap();
-        // Ensure level1.txt is in your project root or resources folder
-        MapLoader.loadMap(gameMap, "level1.txt");
+        MapLoader.loadMap(gameMap, "resources\\maps\\level1.txt");
 
-        // ----- 2. PLAYER INITIALIZATION -------------------------
-        // We now pass the gameMap to the players so they can check collisions
+        // players initialization
+        // TODO: need logic to initialize 1P or 2P depending on the play option (single/multiplayer)
         Player p1 = new Player(gameMap, 2.0, 1); 
         Player p2 = new Player(gameMap, 2.0, 2);
         
         p1.setInput(keysPressed);
         p2.setInput(keysPressed);
 
-        // ----- 3. UI & SCENE SETUP ------------------------------
+        // UI, Scene setup
+        // TODO: Design UI
         Pane root = new Pane();
         root.setStyle("-fx-background-color: black;");
 
-        // ----- 4. DYNAMIC SPRITE LOADING ------------------------
-        // Instead of adding sprites manually, we loop through the loaded grid
+        // load sprites by looping through the map
         for (int x = 0; x < 28; x++) {
             for (int y = 0; y < 36; y++) {
                 Cell cell = gameMap.getCell(x, y);
@@ -49,7 +48,6 @@ public class Main extends Application {
                 if (cell instanceof PelletCell) {
                     root.getChildren().add(((PelletCell) cell).getPellet().sprite);
                 }
-                // TODO: If you implemented Wall entities with sprites, add them here similarly
             }
         }
 
@@ -59,21 +57,22 @@ public class Main extends Application {
         // Calculate window size based on grid (28 cols * 20px, 36 rows * 20px)
         Scene scene = new Scene(root, 28 * 20, 36 * 20);
 
-        // ----- 5. INPUT HANDLING --------------------------------
+        // input handling
         scene.setOnKeyPressed(e -> keysPressed.add(e.getCode()));
         scene.setOnKeyReleased(e -> keysPressed.remove(e.getCode()));
 
-        // ----- 6. GAME LOOP -------------------------------------
+        // game loop
         AnimationTimer gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                // Players now use their internal 'map' reference to move correctly
+                // track movements of players
                 p1.update();
                 p2.update();
                 
-                // Optional: Check for win/loss conditions here
+                // check for win-lose condition
+                // TODO: complete this
                 if (p1.state.equals("DEAD") || p2.state.equals("DEAD")) {
-                    // This is where you'd call your future ScoreManager
+                    // call score manager for actions
                 }
             }
         };
