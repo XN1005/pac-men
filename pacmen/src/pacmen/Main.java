@@ -8,7 +8,7 @@ import pacmen.map.GameMap;
 import pacmen.map.MapLoader;
 import pacmen.map.Cell;
 import pacmen.map.PelletCell;
-// import pacmen.map.WallCell; // if created a wall
+import pacmen.map.WallCell;
 
 
 import javafx.scene.Scene;

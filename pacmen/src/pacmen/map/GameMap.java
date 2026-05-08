@@ -29,7 +29,7 @@ public class GameMap {
     
     public Cell getCell(int x, int y) {
         if (!isValidCoordinates(x, y)) {
-            return new WallCell();
+            return new WallCell(x,y);
         }
         return grid[y][x];  // row y, column x
     }
