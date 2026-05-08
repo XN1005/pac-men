@@ -38,7 +38,7 @@ public class MapLoader {
     private static Cell createCell(char symbol, double px, double py) {
         switch (symbol) {
             case '#': 
-                return new WallCell();
+                return new WallCell(px, py);
             case '.': 
                 return new PelletCell(new Pellet(px, py));
             case '*': 

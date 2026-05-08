@@ -48,6 +48,10 @@ public class Main extends Application {
                 if (cell instanceof PelletCell) {
                     root.getChildren().add(((PelletCell) cell).getPellet().sprite);
                 }
+
+                if (cell instanceof WallCell) {
+                    root.getChildren().add(((WallCell) cell).getSprite());
+                }
             }
         }
 
