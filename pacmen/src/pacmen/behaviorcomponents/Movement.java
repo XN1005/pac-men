@@ -1,5 +1,4 @@
 package pacmen.behaviorcomponents;
 
-public class Movement {
-    
-}
+import pacmen.map.MapLoader;
+
