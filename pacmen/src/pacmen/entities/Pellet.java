@@ -9,9 +9,9 @@ public class Pellet implements Collision {
 
     public Pellet(double x, double y) {
         this.state = "ACTIVE";
-        this.sprite = new Circle(5, Color.BEIGE);
-        this.sprite.setCenterX(100);
-        this.sprite.setCenterY(100); 
+        this.sprite = new Circle(2, Color.BEIGE);
+        this.sprite.setCenterX(x);
+        this.sprite.setCenterY(y); 
     }
 
     @Override
@@ -36,6 +36,7 @@ public class Pellet implements Collision {
 
     @Override
     public void collidePlayer() {
-        state = "CONSUMED";
+        this.state = "CONSUMED";
+        this.sprite.setVisible(false);
     }
 }
