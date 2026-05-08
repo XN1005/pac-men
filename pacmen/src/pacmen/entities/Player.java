@@ -26,11 +26,11 @@ public class Player extends Entity implements Collision {
     // initialize player
     public Player(GameMap map, double speed, int num) throws Exception {
         /** x-coordinates for players:
-         * player num 1: x = 300
-         * player num 3: x = 500
+         * player num 1: x = 180
+         * player num 3: x = 360
          * (basically different spawn points)
          */
-        super(num == 1 ? 300 : 500, 300, speed);
+        super(num == 1 ? 180 : 360, 320, speed);
         this.num = num;
         this.score = 0;
         this.state = "ACTIVE";
@@ -40,13 +40,13 @@ public class Player extends Entity implements Collision {
         
         if (this.num == 1) {
             this.sprite = new Circle(15, Color.YELLOW);
-            this.sprite.setCenterX(300);
-            this.sprite.setCenterY(300);  
+            this.sprite.setCenterX(160);
+            this.sprite.setCenterY(320);  
         }
         else if (this.num == 2) {
             this.sprite = new Circle(15, Color.RED);
-            this.sprite.setCenterX(500);
-            this.sprite.setCenterY(300);  
+            this.sprite.setCenterX(360);
+            this.sprite.setCenterY(320);  
         }
         else {
             throw new Exception();
@@ -89,16 +89,26 @@ public class Player extends Entity implements Collision {
             targetRow = calculateNewRowPos(y, speed, dir);
         }
 
+
+
         // 4. Validate with Map and Move
         if (this.map.isMoveValid(this, targetCol, targetRow)) {
             if (dir == 'r') x += speed;
             if (dir == 'l') x -= speed;
+            
             if (dir == 'd') y += speed;
             if (dir == 'u') y -= speed;
-            
+
             // Update the visual sprite
             this.sprite.setCenterX(x);
             this.sprite.setCenterY(y);
+
+            if (dir == 'x') {
+                x = (currentCol * 20) + 10;
+                y = (currentRow * 20) + 10;
+                this.sprite.setCenterX((currentCol * 20) + 10);
+                this.sprite.setCenterY((currentRow * 20) + 10);
+            }
             
             // 5. Trigger interactions (Pellets, etc.)
             map.getCell(targetCol, targetRow).onSteppedOn(this);
@@ -118,10 +128,10 @@ public class Player extends Entity implements Collision {
             }
             else {
                 if (keysPressed.contains(KeyCode.A)) {
-                    return 'r';
+                    return 'l';
                 }
                 if (keysPressed.contains(KeyCode.D)) {
-                    return 'l';
+                    return 'r';
                 }
             }
         }
