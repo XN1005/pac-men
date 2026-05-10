@@ -46,8 +46,6 @@ public class MultiplayerSceneController implements Initializable {
     @FXML private VBox      joinLobbyList;
     @FXML private Button    btnReady;
 
-    private boolean isHostMode = true;
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         detectLocalIp();
@@ -59,8 +57,6 @@ public class MultiplayerSceneController implements Initializable {
     @FXML private void onTabJoin() { showTab(false); }
 
     private void showTab(boolean host) {
-        isHostMode = host;
-
         hostPanel.setVisible(host);  hostPanel.setManaged(host);
         joinPanel.setVisible(!host); joinPanel.setManaged(!host);
 
@@ -97,10 +93,10 @@ public class MultiplayerSceneController implements Initializable {
         cb.setContent(content);
         // Brief visual feedback
         ipLabel.setStyle("-fx-text-fill:#00FF88;-fx-font-family:'Press Start 2P',monospace;-fx-font-size:14px;");
-        new javafx.animation.PauseTransition(javafx.util.Duration.seconds(1)) {{
-            setOnFinished(e -> ipLabel.setStyle(
-                "-fx-font-family:'Press Start 2P',monospace;-fx-font-size:14px;-fx-text-fill:#FFD700;"));
-        }}.play();
+        javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(1));
+        pause.setOnFinished(e -> ipLabel.setStyle(
+            "-fx-font-family:'Press Start 2P',monospace;-fx-font-size:14px;-fx-text-fill:#FFD700;"));
+        pause.play();
     }
 
     // ── Host: start game (when enough players ready) ──────────────
@@ -124,15 +120,15 @@ public class MultiplayerSceneController implements Initializable {
         connectionStatus.setStyle("-fx-text-fill:#FFD700;-fx-font-family:'Press Start 2P',monospace;-fx-font-size:8px;");
 
         // TODO: Replace this stub with MultiplayerManager.connect(ip, port, callback)
-        new javafx.animation.PauseTransition(javafx.util.Duration.seconds(1)) {{
-            setOnFinished(e -> {
-                connectionStatus.setText("✓ CONNECTED TO " + ip + ":" + port);
-                connectionStatus.setStyle("-fx-text-fill:#00FF88;-fx-font-family:'Press Start 2P',monospace;-fx-font-size:8px;");
-                btnReady.setDisable(false);
-                addPlayerRow(joinLobbyList, "YOU", true);
-                addPlayerRow(joinLobbyList, ip.substring(ip.lastIndexOf('.') + 1).equals("1") ? "HOST" : "HOST", false);
-            });
-        }}.play();
+        javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(1));
+        pause.setOnFinished(e -> {
+            connectionStatus.setText("✓ CONNECTED TO " + ip + ":" + port);
+            connectionStatus.setStyle("-fx-text-fill:#00FF88;-fx-font-family:'Press Start 2P',monospace;-fx-font-size:8px;");
+            btnReady.setDisable(false);
+            addPlayerRow(joinLobbyList, "YOU", true);
+            addPlayerRow(joinLobbyList, ip.substring(ip.lastIndexOf('.') + 1).equals("1") ? "HOST" : "HOST", false);
+        });
+        pause.play();
     }
 
     // ── Join: signal ready ────────────────────────────────────────
@@ -182,7 +178,7 @@ public class MultiplayerSceneController implements Initializable {
     public void refreshLobby(java.util.List<pacmen.entities.Player> players) {
         lobbyList.getChildren().clear();
         for (pacmen.entities.Player p : players) {
-            addPlayerRow(lobbyList, p.getUsername(), false);
+            addPlayerRow(lobbyList, p.toString(), false);
         }
     }
 

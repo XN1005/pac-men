@@ -80,9 +80,9 @@ public class GameOverSceneController implements Initializable {
                 new KeyFrame(Duration.millis(800), new KeyValue(newHighScoreLabel.opacityProperty(), 1.0))
             );
             flash.setCycleCount(Animation.INDEFINITE);
-            new PauseTransition(Duration.millis(700)) {{
-                setOnFinished(e -> flash.play());
-            }}.play();
+            PauseTransition pause = new PauseTransition(Duration.millis(700));
+            pause.setOnFinished(e -> flash.play());
+            pause.play();
         }
     }
 

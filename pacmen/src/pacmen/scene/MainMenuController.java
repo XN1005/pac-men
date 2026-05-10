@@ -4,10 +4,8 @@ import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -95,7 +93,9 @@ public class MainMenuController implements Initializable {
                     new KeyValue(btn.translateYProperty(), 0,  Interpolator.EASE_OUT))
             ).play();
         }
-        new FadeTransition(Duration.millis(100), menuButtons) {{ setToValue(1); }}.play();
+        FadeTransition fade = new FadeTransition(Duration.millis(100), menuButtons);
+        fade.setToValue(1);
+        fade.play();
     }
 
     // ── Animations ────────────────────────────────────────────────
@@ -110,9 +110,9 @@ public class MainMenuController implements Initializable {
             tt.setAutoReverse(true);
             tt.setCycleCount(Animation.INDEFINITE);
             tt.setInterpolator(Interpolator.EASE_BOTH);
-            new PauseTransition(Duration.millis(delays[i])) {{
-                setOnFinished(e -> tt.play());
-            }}.play();
+            PauseTransition pause = new PauseTransition(Duration.millis(delays[i]));
+            pause.setOnFinished(e -> tt.play());
+            pause.play();
         }
     }
 
@@ -127,11 +127,13 @@ public class MainMenuController implements Initializable {
     }
 
     private void startInsertCoinBlink() {
-        new Timeline(
+        Timeline timeline = new Timeline(
             new KeyFrame(Duration.millis(0),    new KeyValue(insertCoinLabel.opacityProperty(), 1.0)),
             new KeyFrame(Duration.millis(600),  new KeyValue(insertCoinLabel.opacityProperty(), 0.0)),
             new KeyFrame(Duration.millis(1200), new KeyValue(insertCoinLabel.opacityProperty(), 1.0))
-        ) {{ setCycleCount(Animation.INDEFINITE); }}.play();
+        );
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
     }
 
     // ── Navigation handlers ───────────────────────────────────────

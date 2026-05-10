@@ -88,10 +88,18 @@ public class GameSceneController implements Initializable {
         MapLoader.loadMap(gameMap, "resources\\maps\\level1.txt");
 
         // 3. Players
-        Player p1 = new Player(gameMap, 1.5, 1);
-        Player p2 = new Player(gameMap, 1.5, 2);
-        p1.setInput(keysPressed);
-        p2.setInput(keysPressed);
+        final Player[] players = new Player[2];
+        try {
+            players[0] = new Player(gameMap, 1.5, 1);
+            players[1] = new Player(gameMap, 1.5, 2);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (players[0] != null) players[0].setInput(keysPressed);
+        if (players[1] != null) players[1].setInput(keysPressed);
+        
+        final Player p1 = players[0];
+        final Player p2 = players[1];
 
         // 4. Ghosts
         Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA);
@@ -136,7 +144,7 @@ public class GameSceneController implements Initializable {
                     updateHUD(p1.score, storedHighScore, currentLevel);
 
                     // Sync lives display (only redraws when value changes)
-                    setLives(p1.lives);
+                    setLives(currentLives);
 
                     // Win/lose check
                     if (p1.state.equals("DEAD") || p2.state.equals("DEAD")) {
