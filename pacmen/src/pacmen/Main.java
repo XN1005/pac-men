@@ -9,6 +9,7 @@ import pacmen.map.MapLoader;
 import pacmen.map.Cell;
 import pacmen.map.PelletCell;
 import pacmen.map.WallCell;
+import pacmen.util.SceneManager;
 
 
 import javafx.scene.Scene;
@@ -56,6 +57,31 @@ public class Main extends Application {
 
         // UI, Scene setup
         // TODO: Design UI
+        SceneManager.init(stage);
+        SceneManager.goTo(SceneManager.MENU);
+
+        GraphicsContext gc = gameCanvas.getGraphicsContext2D();
+
+        startCountdown(() -> {
+            AnimationTimer gameLoop = new AnimationTimer() {
+                @Override
+                public void handle(long now) {
+                    p1.update();
+                    p2.update();
+                    g1.update();
+                    // update HUD via the controller:
+                    updateHUD(p1.score, storedHighScore, currentLevel);
+                    setLives(p1.lives);
+
+                    if (p1.state.equals("DEAD") || p2.state.equals("DEAD")) {
+                        stop();
+                        triggerGameOver(); // navigates to GameOverScene
+                    }
+                }
+            };
+            gameLoop.start();
+        });
+
         
         // TEXT
         Pane root = new Pane();

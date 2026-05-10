@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.canvas.*?>
+<?import javafx.geometry.*?>
+
+<StackPane xmlns="http://javafx.com/javafx/21"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="pacmen.scene.GameSceneController"
+           stylesheets="@../css/arcade.css"
+           fx:id="rootPane"
+           prefWidth="900" prefHeight="650">
+
+    <!-- CRT background -->
+    <Pane styleClass="bg-pane" maxWidth="Infinity" maxHeight="Infinity" mouseTransparent="true"/>
+
+    <!-- ── MAIN GAME LAYOUT ── -->
+    <VBox spacing="0">
+
+        <!-- TOP HUD BAR -->
+        <HBox fx:id="hudBar" styleClass="panel-box" alignment="CENTER_LEFT" spacing="0"
+              prefHeight="56" minHeight="56">
+            <padding><Insets top="0" bottom="0" left="20" right="20"/></padding>
+
+            <!-- Score -->
+            <VBox alignment="CENTER_LEFT" spacing="3" HBox.hgrow="ALWAYS">
+                <Label styleClass="hud-label" text="SCORE"/>
+                <Label fx:id="scoreLabel" styleClass="hud-value" text="000000"/>
+            </VBox>
+
+            <!-- Level -->
+            <VBox alignment="CENTER" spacing="3" HBox.hgrow="ALWAYS">
+                <Label styleClass="hud-label" text="LEVEL"/>
+                <Label fx:id="levelLabel" styleClass="hud-value" text="1"/>
+            </VBox>
+
+            <!-- Lives -->
+            <VBox alignment="CENTER" spacing="3" HBox.hgrow="ALWAYS">
+                <Label styleClass="hud-label" text="LIVES"/>
+                <HBox fx:id="livesBox" alignment="CENTER" spacing="4"/>
+            </VBox>
+
+            <!-- High Score -->
+            <VBox alignment="CENTER_RIGHT" spacing="3" HBox.hgrow="ALWAYS">
+                <Label styleClass="hud-label" text="HIGH SCORE"/>
+                <Label fx:id="highScoreLabel" styleClass="hud-value" text="000000"/>
+            </VBox>
+
+            <!-- Pause Button -->
+            <Button fx:id="btnPause"
+                    styleClass="btn-ghost"
+                    text="⏸ PAUSE"
+                    prefWidth="110"
+                    onAction="#onPause"/>
+        </HBox>
+
+        <!-- GAME CANVAS AREA -->
+        <StackPane fx:id="canvasWrapper" VBox.vgrow="ALWAYS">
+            <Canvas fx:id="gameCanvas" width="900" height="578"/>
+        </StackPane>
+
+    </VBox>
+
+    <!-- ── PAUSE OVERLAY ── -->
+    <StackPane fx:id="pauseOverlay"
+               style="-fx-background-color: rgba(5,8,16,0.88);"
+               visible="false" managed="false">
+        <VBox alignment="CENTER" spacing="20">
+            <Label styleClass="scene-title" text="PAUSED"/>
+            <Region prefHeight="10"/>
+            <Button styleClass="btn-primary"  text="▶  RESUME"    prefWidth="300" onAction="#onResume"/>
+            <Button styleClass="btn-ghost"    text="↩  MAIN MENU" prefWidth="300" onAction="#onMainMenu"/>
+        </VBox>
+    </StackPane>
+
+    <!-- ── COUNTDOWN OVERLAY (3-2-1-GO) ── -->
+    <StackPane fx:id="countdownOverlay"
+               style="-fx-background-color: rgba(5,8,16,0.6);"
+               mouseTransparent="true">
+        <Label fx:id="countdownLabel"
+               style="-fx-font-family:'Press Start 2P',monospace;
+                      -fx-font-size:96px; -fx-text-fill:#FFD700;
+                      -fx-effect:dropshadow(gaussian,rgba(255,215,0,0.95),40,0.7,0,0);"/>
+    </StackPane>
+
+</StackPane>

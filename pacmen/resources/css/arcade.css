@@ -1,0 +1,214 @@
+/* ============================================================
+   PACMEN — Shared Arcade Stylesheet
+   Import this in every scene's FXML:
+     stylesheets="@../css/arcade.css"
+   ============================================================ */
+
+/* ── Base ───────────────────────────────────────────────────── */
+.root {
+    -fx-background-color: #050810;
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+}
+
+/* ── Reusable background pane with CRT grid ─────────────────── */
+.bg-pane {
+    -fx-background-color:
+        repeating-linear-gradient(0deg,
+            transparent, transparent 28px,
+            rgba(0,255,255,0.035) 28px, rgba(0,255,255,0.035) 29px),
+        repeating-linear-gradient(90deg,
+            transparent, transparent 28px,
+            rgba(0,255,255,0.025) 28px, rgba(0,255,255,0.025) 29px),
+        radial-gradient(ellipse 80% 70% at 50% 40%,
+            #0d1840 0%, #050810 100%);
+    -fx-min-width: 900;
+    -fx-min-height: 650;
+}
+
+/* ── Section titles ─────────────────────────────────────────── */
+.scene-title {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 40px;
+    -fx-text-fill: #FFD700;
+    -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.85), 24, 0.6, 0, 0)
+                dropshadow(gaussian, rgba(255,255,255,0.4), 6, 0.3, 0, 0);
+}
+
+.scene-subtitle {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 9px;
+    -fx-text-fill: #00FFFF;
+    -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.6), 10, 0.4, 0, 0);
+    -fx-letter-spacing: 3px;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn-primary {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 13px;
+    -fx-background-color: #FFD700;
+    -fx-text-fill: #050810;
+    -fx-border-color: #ffffff;
+    -fx-border-width: 2px;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-pref-height: 54px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.75), 18, 0.5, 0, 0);
+}
+.btn-primary:hover {
+    -fx-background-color: #fff176;
+    -fx-effect: dropshadow(gaussian, rgba(255,215,0,1.0), 28, 0.7, 0, 0);
+    -fx-scale-x: 1.03; -fx-scale-y: 1.03;
+}
+.btn-primary:pressed { -fx-scale-x: 0.97; -fx-scale-y: 0.97; }
+
+.btn-cyan {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 11px;
+    -fx-background-color: transparent;
+    -fx-text-fill: #00FFFF;
+    -fx-border-color: #00FFFF;
+    -fx-border-width: 2px;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-pref-height: 50px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.45), 10, 0.35, 0, 0);
+}
+.btn-cyan:hover {
+    -fx-background-color: rgba(0,255,255,0.12);
+    -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.9), 20, 0.6, 0, 0);
+    -fx-scale-x: 1.02; -fx-scale-y: 1.02;
+}
+.btn-cyan:pressed { -fx-scale-x: 0.97; -fx-scale-y: 0.97; }
+
+.btn-pink {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 11px;
+    -fx-background-color: transparent;
+    -fx-text-fill: #FF6EC7;
+    -fx-border-color: #FF6EC7;
+    -fx-border-width: 2px;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-pref-height: 50px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(255,110,199,0.45), 10, 0.35, 0, 0);
+}
+.btn-pink:hover {
+    -fx-background-color: rgba(255,110,199,0.12);
+    -fx-effect: dropshadow(gaussian, rgba(255,110,199,0.9), 20, 0.6, 0, 0);
+    -fx-scale-x: 1.02; -fx-scale-y: 1.02;
+}
+.btn-pink:pressed { -fx-scale-x: 0.97; -fx-scale-y: 0.97; }
+
+.btn-ghost {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 9px;
+    -fx-background-color: transparent;
+    -fx-text-fill: rgba(255,255,255,0.4);
+    -fx-border-color: rgba(255,255,255,0.2);
+    -fx-border-width: 2px;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-pref-height: 44px;
+    -fx-cursor: hand;
+}
+.btn-ghost:hover {
+    -fx-text-fill: rgba(255,255,255,0.75);
+    -fx-border-color: rgba(255,255,255,0.5);
+}
+.btn-ghost:pressed { -fx-scale-x: 0.97; -fx-scale-y: 0.97; }
+
+.btn-danger {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 11px;
+    -fx-background-color: transparent;
+    -fx-text-fill: #FF3B3B;
+    -fx-border-color: #FF3B3B;
+    -fx-border-width: 2px;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-pref-height: 50px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(255,59,59,0.4), 10, 0.3, 0, 0);
+}
+.btn-danger:hover {
+    -fx-background-color: rgba(255,59,59,0.12);
+    -fx-effect: dropshadow(gaussian, rgba(255,59,59,0.85), 18, 0.55, 0, 0);
+    -fx-scale-x: 1.02; -fx-scale-y: 1.02;
+}
+.btn-danger:pressed { -fx-scale-x: 0.97; -fx-scale-y: 0.97; }
+
+/* ── Stat / info labels ─────────────────────────────────────── */
+.stat-label {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: rgba(0,255,255,0.7);
+}
+
+.stat-value {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 14px;
+    -fx-text-fill: #FFD700;
+    -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.5), 8, 0.3, 0, 0);
+}
+
+/* ── Divider line ────────────────────────────────────────────── */
+.neon-divider {
+    -fx-background-color: rgba(0,255,255,0.25);
+    -fx-pref-height: 2px;
+    -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.5), 6, 0.4, 0, 0);
+}
+
+/* ── Panel / card box ───────────────────────────────────────── */
+.panel-box {
+    -fx-background-color: rgba(0,20,60,0.7);
+    -fx-border-color: rgba(0,255,255,0.3);
+    -fx-border-width: 2px;
+    -fx-padding: 20 24 20 24;
+}
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.footer-label {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 7px;
+    -fx-text-fill: rgba(0,255,255,0.3);
+}
+
+/* ── HUD labels (used inside GameScene) ─────────────────────── */
+.hud-label {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: rgba(255,255,255,0.6);
+}
+.hud-value {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 13px;
+    -fx-text-fill: #FFD700;
+}
+.hud-lives {
+    -fx-font-size: 18px;
+    -fx-text-fill: #FFD700;
+}
+
+/* ── Multiplayer list row ───────────────────────────────────── */
+.player-row {
+    -fx-background-color: rgba(0,255,255,0.06);
+    -fx-border-color: rgba(0,255,255,0.15);
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 10 16;
+}
+.player-row-name {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: #00FFFF;
+}
+.player-row-status {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 8px;
+    -fx-text-fill: rgba(255,215,0,0.7);
+}
+.status-dot-ready    { -fx-text-fill: #00FF88; -fx-font-size:16px; }
+.status-dot-waiting  { -fx-text-fill: #FFD700; -fx-font-size:16px; }

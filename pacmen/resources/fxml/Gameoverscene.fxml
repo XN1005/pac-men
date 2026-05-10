@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.geometry.*?>
+
+<StackPane xmlns="http://javafx.com/javafx/21"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="pacmen.scene.GameOverSceneController"
+           stylesheets="@../css/arcade.css"
+           fx:id="rootPane"
+           prefWidth="900" prefHeight="650">
+
+    <!-- CRT background -->
+    <Pane styleClass="bg-pane" maxWidth="Infinity" maxHeight="Infinity" mouseTransparent="true"/>
+
+    <!-- Ghost decorations -->
+    <Pane mouseTransparent="true">
+        <Label style="-fx-font-size:44px;-fx-text-fill:rgba(255,59,59,0.15);"
+               text="ᗣ" layoutX="50" layoutY="70"/>
+        <Label style="-fx-font-size:44px;-fx-text-fill:rgba(255,182,255,0.15);"
+               text="ᗣ" layoutX="800" layoutY="90"/>
+        <Label style="-fx-font-size:44px;-fx-text-fill:rgba(77,204,255,0.15);"
+               text="ᗣ" layoutX="36" layoutY="510"/>
+        <Label style="-fx-font-size:44px;-fx-text-fill:rgba(255,165,0,0.15);"
+               text="ᗣ" layoutX="816" layoutY="490"/>
+    </Pane>
+
+    <!-- ── MAIN CONTENT ── -->
+    <VBox alignment="CENTER" spacing="0" style="-fx-padding:40 80 36 80;">
+
+        <!-- GAME OVER title -->
+        <Label fx:id="titleLabel" styleClass="scene-title" text="GAME OVER"/>
+        <Region prefHeight="8"/>
+        <Label fx:id="subtitleLabel" styleClass="scene-subtitle" text="BETTER LUCK NEXT TIME"/>
+
+        <Region prefHeight="32"/>
+
+        <!-- Score panel -->
+        <VBox styleClass="panel-box" spacing="16" maxWidth="480" alignment="CENTER">
+            <padding><Insets top="24" bottom="24" left="40" right="40"/></padding>
+
+            <!-- Final Score row -->
+            <HBox alignment="CENTER_LEFT" spacing="0">
+                <Label styleClass="stat-label" text="FINAL SCORE" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="finalScoreLabel" styleClass="stat-value" text="0"/>
+            </HBox>
+
+            <Region styleClass="neon-divider" maxWidth="Infinity"/>
+
+            <!-- High Score row -->
+            <HBox alignment="CENTER_LEFT" spacing="0">
+                <Label styleClass="stat-label" text="HIGH SCORE" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="highScoreLabel" styleClass="stat-value" text="0"/>
+            </HBox>
+
+            <Region styleClass="neon-divider" maxWidth="Infinity"/>
+
+            <!-- Level Reached row -->
+            <HBox alignment="CENTER_LEFT" spacing="0">
+                <Label styleClass="stat-label" text="LEVEL REACHED" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="levelLabel" styleClass="stat-value" text="1"/>
+            </HBox>
+
+            <Region styleClass="neon-divider" maxWidth="Infinity"/>
+
+            <!-- Time Survived row -->
+            <HBox alignment="CENTER_LEFT" spacing="0">
+                <Label styleClass="stat-label" text="TIME SURVIVED" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="timeLabel" styleClass="stat-value" text="00:00"/>
+            </HBox>
+        </VBox>
+
+        <!-- NEW HIGH SCORE badge (hidden by default) -->
+        <Label fx:id="newHighScoreLabel"
+               text="✦  NEW HIGH SCORE  ✦"
+               style="-fx-font-family:'Press Start 2P',monospace;
+                      -fx-font-size:11px; -fx-text-fill:#FFD700;
+                      -fx-effect:dropshadow(gaussian,rgba(255,215,0,0.9),14,0.5,0,0);"
+               visible="false" managed="false"/>
+
+        <Region prefHeight="28"/>
+
+        <!-- Navigation buttons -->
+        <VBox alignment="CENTER" spacing="12" maxWidth="380">
+            <Button styleClass="btn-primary"
+                    text="↺  PLAY AGAIN"
+                    maxWidth="Infinity"
+                    onAction="#onPlayAgain"/>
+            <Button styleClass="btn-cyan"
+                    text="⬡  MULTIPLAYER"
+                    maxWidth="Infinity"
+                    onAction="#onMultiplayer"/>
+            <Button styleClass="btn-ghost"
+                    text="↩  MAIN MENU"
+                    maxWidth="Infinity"
+                    onAction="#onMainMenu"/>
+        </VBox>
+
+    </VBox>
+
+</StackPane>
