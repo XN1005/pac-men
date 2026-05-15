@@ -16,6 +16,7 @@ import javafx.util.Duration;
 import pacmen.entities.Ghost;
 import pacmen.entities.Player;
 import pacmen.map.Cell;
+import pacmen.map.CherryCell;
 import pacmen.map.GameMap;
 import pacmen.map.MapLoader;
 import pacmen.map.PelletCell;
@@ -112,6 +113,8 @@ public class GameSceneController implements Initializable {
                 Cell cell = gameMap.getCell(x, y);
                 if (cell instanceof PelletCell)
                     gamePane.getChildren().add(((PelletCell) cell).getPellet().sprite);
+                if (cell instanceof CherryCell)
+                    gamePane.getChildren().add(((CherryCell) cell).getCherry().sprite);
                 if (cell instanceof WallCell)
                     gamePane.getChildren().add(((WallCell) cell).getSprite());
             }

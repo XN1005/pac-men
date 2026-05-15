@@ -12,6 +12,8 @@ public class WallCell implements Cell {
         this.sprite = new Rectangle(20, 20, Color.BLUE);
         this.sprite.setX(px - 10); // Center it (pixel - half cell size)
         this.sprite.setY(py - 10);
+        // For now, use provided asset so ignore
+        this.sprite.setVisible(false); // Hide the default rectangle since we have a custom image
         
         // Optional: Add a stroke to make individual blocks visible
         this.sprite.setStroke(Color.DARKBLUE);

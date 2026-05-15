@@ -11,7 +11,7 @@ public class Cherry extends Entity implements Collision {
     public Cherry(double x, double y) {
         super(x, y, 0); // Static item
         this.state = "ACTIVE";
-        this.sprite = new Circle(8, Color.RED);
+        this.sprite = new Circle(10, Color.RED);
         this.sprite.setCenterX(x);
         this.sprite.setCenterY(y);
     }
@@ -28,6 +28,7 @@ public class Cherry extends Entity implements Collision {
     @Override 
     public void collidePlayer() {
         this.state = "CONSUMED";
+        this.sprite.setVisible(false); // Hide the cherry when consumed
     }
     @Override public void collideCherry() {}
 }

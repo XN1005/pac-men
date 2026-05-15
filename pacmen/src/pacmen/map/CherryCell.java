@@ -1,14 +1,18 @@
 package pacmen.map;
 
+import pacmen.entities.Cherry;
 import pacmen.entities.Entity;
 import pacmen.entities.Player;
-import pacmen.entities.Cherry;
 
 public class CherryCell implements Cell {
     private Cherry cherry;
 
     public CherryCell(Cherry cherry) {
         this.cherry = cherry;
+    }
+
+    public Cherry getCherry() {
+        return cherry;
     }
 
     @Override

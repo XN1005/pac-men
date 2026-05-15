@@ -8,6 +8,8 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import pacmen.scene.GameSceneController;
 
+import java.io.File;
+
 /**
  * Central scene-switching utility.
  * Call SceneManager.init(stage) once from Main.java, then
@@ -16,10 +18,10 @@ import pacmen.scene.GameSceneController;
 public class SceneManager {
 
     // ── Scene name constants ──────────────────────────────────────
-    public static final String MENU        = "fxml/MainMenu.fxml";
-    public static final String GAME        = "fxml/GameScene.fxml";
-    public static final String GAME_OVER   = "fxml/GameOverScene.fxml";
-    public static final String MULTIPLAYER = "fxml/MultiplayerScene.fxml";
+    public static final String MENU        = "resources/fxml/Mainmenu.fxml";
+    public static final String GAME        = "resources/fxml/Gamescene.fxml";
+    public static final String GAME_OVER   = "resources/fxml/Gameoverscene.fxml";
+    public static final String MULTIPLAYER = "resources/fxml/Multiplayerscene.fxml";
 
     private static Stage        primaryStage;
     private static final int    W = 900;
@@ -67,9 +69,16 @@ public class SceneManager {
     // ── Internal ──────────────────────────────────────────────────
     private static void loadScene(String fxmlPath) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                SceneManager.class.getClassLoader().getResource("resources/" + fxmlPath)
-            );
+            // Resolve file path relative to project root
+            File fxmlFile = new File(fxmlPath);
+            
+            if (!fxmlFile.exists()) {
+                System.err.println("FXML file not found: " + fxmlFile.getAbsolutePath());
+                return;
+            }
+            
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(fxmlFile.toURI().toURL());
             Parent root = loader.load();
             root.setOpacity(0);
 
@@ -88,6 +97,7 @@ public class SceneManager {
             in.play();
 
         } catch (Exception ex) {
+            System.err.println("Error loading FXML: " + fxmlPath);
             ex.printStackTrace();
         }
     }

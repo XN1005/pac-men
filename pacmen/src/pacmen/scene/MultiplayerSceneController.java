@@ -1,18 +1,38 @@
 package pacmen.scene;
 
+import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import pacmen.entities.Ghost;
+import pacmen.entities.Player;
+import pacmen.map.Cell;
+import pacmen.map.CherryCell;
+import pacmen.map.GameMap;
+import pacmen.map.MapLoader;
+import pacmen.map.PelletCell;
+import pacmen.map.WallCell;
 import pacmen.util.SceneManager;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 /**
  * Controls the Multiplayer lobby screen.
@@ -45,6 +65,8 @@ public class MultiplayerSceneController implements Initializable {
     @FXML private Label     connectionStatus;
     @FXML private VBox      joinLobbyList;
     @FXML private Button    btnReady;
+
+    private final Set<KeyCode> keysPressed = new HashSet<>();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -102,7 +124,90 @@ public class MultiplayerSceneController implements Initializable {
     // ── Host: start game (when enough players ready) ──────────────
     @FXML private void onStartGame() {
         // TODO: signal MultiplayerManager to begin game
-        SceneManager.goTo(SceneManager.GAME);
+        launchDraftMultiplayerGame();
+    }
+
+    private void launchDraftMultiplayerGame() {
+        GameMap gameMap = new GameMap();
+        MapLoader.loadMap(gameMap, "resources\\maps\\level1.txt");
+
+        Player p1 = new Player(gameMap, 1.5, 1);
+        Player p2 = new Player(gameMap, 1.5, 2);
+
+        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA);
+        Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE);
+        Ghost g3 = new Ghost(gameMap, 270, 280, 1.5, Color.PINK);
+
+        p1.setInput(keysPressed);
+        p2.setInput(keysPressed);
+
+        Pane root = new Pane();
+        root.setStyle("-fx-background-color: black;");
+
+        Label scoreLabelP1 = new Label("Score: " + p1.score);
+        Label scoreLabelP2 = new Label("Score: " + p2.score);
+        scoreLabelP1.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        scoreLabelP2.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        scoreLabelP1.setTextFill(Color.WHITE);
+        scoreLabelP2.setTextFill(Color.WHITE);
+        scoreLabelP1.setLayoutX(50.0);
+        scoreLabelP1.setLayoutY(630.0);
+        scoreLabelP2.setLayoutX(410.0);
+        scoreLabelP2.setLayoutY(630.0);
+
+        for (int x = 0; x < 28; x++) {
+            for (int y = 0; y < 36; y++) {
+                Cell cell = gameMap.getCell(x, y);
+                if (cell instanceof PelletCell) {
+                    root.getChildren().add(((PelletCell) cell).getPellet().sprite);
+                }
+                if (cell instanceof CherryCell) {
+                    root.getChildren().add(((CherryCell) cell).getCherry().sprite);
+                }
+                if (cell instanceof WallCell) {
+                    root.getChildren().add(((WallCell) cell).getSprite());
+                }
+            }
+        }
+
+        File imageFile = new File("resources/assets/MAP_Level1.png");
+        Image image = new Image(imageFile.toURI().toString());
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(560);
+        imageView.setPreserveRatio(true);
+
+        root.getChildren().addAll(p1.sprite, p2.sprite);
+        root.getChildren().addAll(scoreLabelP1, scoreLabelP2);
+        root.getChildren().add(imageView);
+        root.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite);
+
+        Scene scene = new Scene(root, 28 * 20, 36 * 20);
+        scene.setOnKeyPressed(e -> keysPressed.add(e.getCode()));
+        scene.setOnKeyReleased(e -> keysPressed.remove(e.getCode()));
+
+        AnimationTimer gameLoop = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                p1.update();
+                p2.update();
+                g1.update();
+                g2.update();
+                g3.update();
+                scoreLabelP1.setText("Score: " + p1.score);
+                scoreLabelP2.setText("Score: " + p2.score);
+
+                if (p1.state.equals("DEAD") || p2.state.equals("DEAD")) {
+                    // TODO: call score manager for actions
+                }
+            }
+        };
+        gameLoop.start();
+
+        if (SceneManager.getStage() != null) {
+            SceneManager.getStage().setTitle("Pac-Men Multiplayer");
+            SceneManager.getStage().setScene(scene);
+            SceneManager.getStage().show();
+        }
     }
 
     // ── Join: connect to host ─────────────────────────────────────
