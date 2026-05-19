@@ -126,8 +126,8 @@ public class MultiplayerSceneController implements Initializable {
         GameMap gameMap = new GameMap();
         MapLoader.loadMap(gameMap, "resources\\maps\\level1.txt");
 
-        Player p1 = new Player(gameMap, 1.5, 1);
-        Player p2 = new Player(gameMap, 1.5, 2);
+        Player p1 = new Player(gameMap, 1.5, 1, 9, 17);
+        Player p2 = new Player(gameMap, 1.5, 2, 18, 17);
 
         Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA);
         Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE);
