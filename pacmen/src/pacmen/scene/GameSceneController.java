@@ -91,8 +91,7 @@ public class GameSceneController implements Initializable {
         // 3. Players
         final Player[] players = new Player[2];
         try {
-            players[0] = new Player(gameMap, 1.5, 1);
-            players[1] = new Player(gameMap, 1.5, 2);
+            players[0] = new Player(gameMap, 1.5, 1, 14, 17);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -100,7 +99,7 @@ public class GameSceneController implements Initializable {
         if (players[1] != null) players[1].setInput(keysPressed);
         
         final Player p1 = players[0];
-        final Player p2 = players[1];
+        // final Player p2 = players[1];
 
         // 4. Ghosts
         Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA);
@@ -128,7 +127,7 @@ public class GameSceneController implements Initializable {
         imageView.setPreserveRatio(true);
 
         // 7. Add everything to the pane (same order as original Main.java)
-        gamePane.getChildren().addAll(p1.sprite, p2.sprite);
+        gamePane.getChildren().addAll(p1.sprite);
         gamePane.getChildren().add(imageView);
         gamePane.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite);
 
@@ -138,7 +137,7 @@ public class GameSceneController implements Initializable {
                 @Override
                 public void handle(long now) {
                     p1.update();
-                    p2.update();
+                    // p2.update();
                     g1.update();
                     g2.update();
                     g3.update();
@@ -150,7 +149,7 @@ public class GameSceneController implements Initializable {
                     setLives(currentLives);
 
                     // Win/lose check
-                    if (p1.state.equals("DEAD") || p2.state.equals("DEAD")) {
+                    if (p1.state.equals("DEAD")) /* || p2.state.equals("DEAD") */ {
                         stop();
                         triggerGameOver();
                     }
