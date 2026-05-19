@@ -24,13 +24,13 @@ public class Player extends Entity implements Collision {
     }
     
     // initialize player
-    public Player(GameMap map, double speed, int num) throws Exception {
+    public Player(GameMap map, double speed, int num, int col, int row) throws Exception {
         /** x-coordinates for players:
          * player num 1: x = 180
          * player num 3: x = 360
          * (basically different spawn points)
          */
-        super(num == 1 ? 180 : 360, 320, speed);
+        super(num == 1 ? col * 20 : 370, row * 20, speed);
         this.num = num;
         this.score = 0;
         this.state = "ACTIVE";
@@ -40,13 +40,13 @@ public class Player extends Entity implements Collision {
         
         if (this.num == 1) {
             this.sprite = new Circle(15, Color.YELLOW);
-            this.sprite.setCenterX(160);
-            this.sprite.setCenterY(320);  
+            this.sprite.setCenterX((col * 20) + 10); // 9 for multi, 14 for single
+            this.sprite.setCenterY((row * 20) + 10); // 17 for multi and single
         }
         else if (this.num == 2) {
             this.sprite = new Circle(15, Color.RED);
-            this.sprite.setCenterX(360);
-            this.sprite.setCenterY(320);  
+            this.sprite.setCenterX((col * 20) + 10); // 18 for multi
+            this.sprite.setCenterY((row * 20) + 10); // 17 for multi
         }
         else {
             throw new Exception();
@@ -103,6 +103,8 @@ public class Player extends Entity implements Collision {
             this.sprite.setCenterX(x);
             this.sprite.setCenterY(y);
 
+            if (dir == 'r' || dir == 'l') this.sprite.setCenterY((currentRow * 20) + 10);
+            if (dir == 'u' || dir == 'd') this.sprite.setCenterX((currentCol * 20) + 10);
             if (dir == 'x') {
                 x = (currentCol * 20) + 10;
                 y = (currentRow * 20) + 10;

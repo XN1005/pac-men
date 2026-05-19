@@ -19,12 +19,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import pacmen.entities.Ghost;
 import pacmen.entities.Player;
-import pacmen.map.Cell;
-import pacmen.map.CherryCell;
-import pacmen.map.GameMap;
-import pacmen.map.MapLoader;
-import pacmen.map.PelletCell;
-import pacmen.map.WallCell;
+import pacmen.map.*;
 import pacmen.util.SceneManager;
 
 import java.io.File;
