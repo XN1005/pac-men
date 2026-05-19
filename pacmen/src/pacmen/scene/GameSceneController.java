@@ -86,7 +86,7 @@ public class GameSceneController implements Initializable {
 
         // 2. Map
         GameMap gameMap = new GameMap();
-        MapLoader.loadMap(gameMap, "resources\\maps\\level1.txt");
+        MapLoader.loadMap(gameMap, "resources/maps/level1.txt");
 
         // 3. Players
         final Player[] players = new Player[2];

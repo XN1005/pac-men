@@ -26,7 +26,6 @@ public class MainMenuController implements Initializable {
     @FXML private StackPane rootPane;
     @FXML private StackPane splashOverlay;
     @FXML private Label     titleLabel;
-    @FXML private Label     insertCoinLabel;
     @FXML private Label     playerCountLabel;
     @FXML private HBox      dotRowTop;
     @FXML private HBox      dotRowBottom;
@@ -46,7 +45,6 @@ public class MainMenuController implements Initializable {
         styleGhosts();
         startGhostFloatAnimations();
         startTitlePulse();
-        startInsertCoinBlink();
         splashOverlay.setOnMouseClicked(e -> dismissSplash());
     }
 
@@ -126,21 +124,9 @@ public class MainMenuController implements Initializable {
         st.play();
     }
 
-    private void startInsertCoinBlink() {
-        Timeline timeline = new Timeline(
-            new KeyFrame(Duration.millis(0),    new KeyValue(insertCoinLabel.opacityProperty(), 1.0)),
-            new KeyFrame(Duration.millis(600),  new KeyValue(insertCoinLabel.opacityProperty(), 0.0)),
-            new KeyFrame(Duration.millis(1200), new KeyValue(insertCoinLabel.opacityProperty(), 1.0))
-        );
-        timeline.setCycleCount(Animation.INDEFINITE);
-        timeline.play();
-    }
-
     // ── Navigation handlers ───────────────────────────────────────
     @FXML private void onPlay()        { SceneManager.goTo(SceneManager.GAME); }
-    @FXML private void onHostGame()    { SceneManager.goTo(SceneManager.MULTIPLAYER); }
-    @FXML private void onJoinGame()    { SceneManager.goTo(SceneManager.MULTIPLAYER); }
-    @FXML private void onSettings()    { System.out.println("[MENU] Settings – TODO"); }
+    @FXML private void onHostGame()    { SceneManager.goTo(SceneManager.GAME); }
     @FXML private void onLeaderboard() { System.out.println("[MENU] Leaderboard – TODO"); }
 
     @FXML private void onQuit() {
