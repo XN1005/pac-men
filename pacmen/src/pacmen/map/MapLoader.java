@@ -3,9 +3,9 @@ package pacmen.map;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import pacmen.entities.Cherry;
 import pacmen.entities.Pellet;
 import pacmen.entities.PowerPellet;
-import pacmen.entities.Cherry;
 
 public class MapLoader {
     private static final int CELL_SIZE = 20;
@@ -32,6 +32,24 @@ public class MapLoader {
         } catch (IOException e) {
             System.err.println("Error loading map file: " + e.getMessage());
             // Fallback: fill with walls or paths so the game doesn't crash
+        }
+    }
+
+    public static void connectWallCells(GameMap gameMap) {
+        for (int x = 0; x < gameMap.getCols(); x++) {
+            for (int y = 0; y < gameMap.getRows(); y++) {
+                Cell cell = gameMap.getCell(x, y);
+                if (!(cell instanceof WallCell)) {
+                    continue;
+                }
+
+                boolean left  = x > 0                          && gameMap.getCell(x - 1, y) instanceof WallCell;
+                boolean right = x < gameMap.getCols() - 1     && gameMap.getCell(x + 1, y) instanceof WallCell;
+                boolean up    = y > 0                          && gameMap.getCell(x, y - 1) instanceof WallCell;
+                boolean down  = y < gameMap.getRows() - 1     && gameMap.getCell(x, y + 1) instanceof WallCell;
+
+                ((WallCell) cell).setConnections(left, right, up, down);
+            }
         }
     }
 

@@ -5,8 +5,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+// import javafx.scene.image.Image;
+// import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -21,6 +21,7 @@ import pacmen.map.GameMap;
 import pacmen.map.MapLoader;
 import pacmen.map.PelletCell;
 import pacmen.map.WallCell;
+import pacmen.userinterface.TimerDisplay;
 import pacmen.util.SceneManager;
 
 import java.io.File;
@@ -30,7 +31,6 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 public class GameSceneController implements Initializable {
-
     // ── FXML injections ───────────────────────────────────────────
     @FXML private StackPane rootPane;
     @FXML private Canvas    gameCanvas;      // kept in FXML but hidden behind gamePane
@@ -41,7 +41,11 @@ public class GameSceneController implements Initializable {
     @FXML private Label     scoreLabel;
     @FXML private Label     highScoreLabel;
     @FXML private Label     levelLabel;
+    @FXML private Label     timerLabel;
     @FXML private HBox      livesBox;
+
+    private long elapsedTimerMillis = 0;
+    private long lastTimerUpdateNanos = 0;
 
     // ── Game state ────────────────────────────────────────────────
     private boolean    paused          = false;
@@ -86,7 +90,8 @@ public class GameSceneController implements Initializable {
 
         // 2. Map
         GameMap gameMap = new GameMap();
-        MapLoader.loadMap(gameMap, "resources/maps/level1.txt");
+        MapLoader.loadMap(gameMap, "resources/maps/level2.txt");
+        MapLoader.connectWallCells(gameMap);
 
         // 3. Players
         final Player[] players = new Player[2];
@@ -120,22 +125,33 @@ public class GameSceneController implements Initializable {
         }
 
         // 6. Map border image
-        File imageFile = new File("resources/assets/MAP_Level1.png");
-        Image image = new Image(imageFile.toURI().toString());
-        ImageView imageView = new ImageView(image);
-        imageView.setFitWidth(560);
-        imageView.setPreserveRatio(true);
+        // File imageFile = new File("resources/assets/MAP_Level1.png");
+        // Image image = new Image(imageFile.toURI().toString());
+        // ImageView imageView = new ImageView(image);
+        // imageView.setFitWidth(560);
+        // imageView.setPreserveRatio(true);
 
         // 7. Add everything to the pane (same order as original Main.java)
         gamePane.getChildren().addAll(p1.sprite);
-        gamePane.getChildren().add(imageView);
+        //gamePane.getChildren().add(imageView);
         gamePane.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite);
 
         // 8. Countdown → then start the game loop
         startCountdown(() -> {
+            elapsedTimerMillis = 0;
+            lastTimerUpdateNanos = System.nanoTime();
+            updateTimerDisplay();
+
             gameLoop = new AnimationTimer() {
                 @Override
                 public void handle(long now) {
+                    long deltaMillis = (now - lastTimerUpdateNanos) / 1_000_000;
+                    if (deltaMillis > 0) {
+                        elapsedTimerMillis += deltaMillis;
+                        lastTimerUpdateNanos = now;
+                        updateTimerDisplay();
+                    }
+
                     p1.update();
                     // p2.update();
                     g1.update();
@@ -226,7 +242,7 @@ public class GameSceneController implements Initializable {
     /** Stops the loop and navigates to the Game Over screen. */
     public void triggerGameOver() {
         if (gameLoop != null) gameLoop.stop();
-        SceneManager.goToGameOver(currentScore);
+        SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel);
     }
 
     // ── Pause ─────────────────────────────────────────────────────
@@ -238,11 +254,18 @@ public class GameSceneController implements Initializable {
         else        { if (gameLoop != null) gameLoop.start(); }
     }
 
+    private void updateTimerDisplay() {
+        timerLabel.setText(TimerDisplay.formatElapsedTime(elapsedTimerMillis));
+    }
+
     @FXML private void onResume() {
         paused = false;
         pauseOverlay.setVisible(false);
         pauseOverlay.setManaged(false);
-        if (gameLoop != null) gameLoop.start();
+        if (gameLoop != null) {
+            lastTimerUpdateNanos = System.nanoTime();
+            gameLoop.start();
+        }
     }
 
     // ── Navigation ────────────────────────────────────────────────

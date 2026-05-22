@@ -125,6 +125,7 @@ public class MultiplayerSceneController implements Initializable {
     private void launchDraftMultiplayerGame() {
         GameMap gameMap = new GameMap();
         MapLoader.loadMap(gameMap, "resources\\maps\\level1.txt");
+        MapLoader.connectWallCells(gameMap);
 
         Player p1 = new Player(gameMap, 1.5, 1, 9, 17);
         Player p2 = new Player(gameMap, 1.5, 2, 18, 17);
