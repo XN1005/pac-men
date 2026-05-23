@@ -14,6 +14,8 @@ public class Player extends Entity implements Collision {
     public String state;
     public int combo = 0;   // start combo = 0
     private GameMap map;
+    public int currentCol;
+    public int currentRow;
 
     public double powerUpTime;
 
@@ -37,6 +39,10 @@ public class Player extends Entity implements Collision {
         this.combo = 0;
         this.powerUpTime = 0;
         this.map = map;
+        this.direction = 1;
+        this.currentCol = col;
+        this.currentRow = row;
+
         
         if (this.num == 1) {
             this.sprite = new Circle(15, Color.YELLOW);
@@ -73,15 +79,16 @@ public class Player extends Entity implements Collision {
         // set player movement
         // CELL_SIZE = 20
         // 1. Get current logical position
-        int currentCol = (int) Math.round((x - 10) / 20.0);
-        int currentRow = (int) Math.round((y - 10) / 20.0);
+        this.currentCol = (int) Math.round((x - 10) / 20.0);
+        this.currentRow = (int) Math.round((y - 10) / 20.0);
 
         // 2. Determine requested direction
         char dir = requestMovementDirection();
+        this.direction = toDirection(dir);
         
         // 3. Predict the NEXT grid cell
-        int targetCol = currentCol;
-        int targetRow = currentRow;
+        int targetCol = this.currentCol;
+        int targetRow = this.currentRow;
 
         if (dir == 'l' || dir == 'r') {
             targetCol = calculateNewColPos(x, speed, dir);
@@ -167,6 +174,14 @@ public class Player extends Entity implements Collision {
         double predictedY = (dir == 'd') ? currentY + speed : currentY - speed;
         return (int) Math.round((predictedY - 10) / 20.0);
     }
+
+    private int toDirection(char dir) {
+        if (dir == 'u') return 0;
+        if (dir == 'r') return 1;
+        if (dir == 'd') return 2;
+        if (dir == 'l') return 3;
+        return this.direction;
+    }
     
     @Override
     public void render() {
@@ -186,7 +201,7 @@ public class Player extends Entity implements Collision {
         this.score += 5;
     }
 
-    public void collideGhost() {
+    public void collideGhost(Ghost ghost) {
         if (this.state.equals("POWER_UP")) {
             this.score += (int) (Math.pow(200, combo));    // stated requirement
             this.combo++;

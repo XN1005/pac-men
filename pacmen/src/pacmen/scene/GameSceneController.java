@@ -48,10 +48,11 @@ public class GameSceneController implements Initializable {
     private long lastTimerUpdateNanos = 0;
 
     // ── Game state ────────────────────────────────────────────────
-    private boolean    paused          = false;
+    private String     state           = "ACTIVE"; // ACTIVE, PAUSED, WIN, LOSE     
+    private GameMap    gameMap         = null;
     private int        currentScore    = 0;
-    private int        currentLives    = 3;
-    private int        currentLevel    = 1;
+    private int        currentLives    = 1;
+    private int        currentLevel    = 2;
     private static int storedHighScore = 0;
 
     // ── Input ─────────────────────────────────────────────────────
@@ -65,7 +66,7 @@ public class GameSceneController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         buildLivesDisplay(currentLives);
-        updateHUD(0, storedHighScore, 1);
+        updateHUD(0, storedHighScore, 2);
 
         // Wire keyboard input as soon as this scene is attached to a window
         rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
@@ -90,13 +91,14 @@ public class GameSceneController implements Initializable {
 
         // 2. Map
         GameMap gameMap = new GameMap();
+        this.gameMap = gameMap;
         MapLoader.loadMap(gameMap, "resources/maps/level2.txt");
         MapLoader.connectWallCells(gameMap);
 
         // 3. Players
         final Player[] players = new Player[2];
         try {
-            players[0] = new Player(gameMap, 1.5, 1, 14, 17);
+            players[0] = new Player(gameMap, 1.5, 1, 20, 14);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -107,9 +109,9 @@ public class GameSceneController implements Initializable {
         // final Player p2 = players[1];
 
         // 4. Ghosts
-        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA);
-        Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE);
-        Ghost g3 = new Ghost(gameMap, 270, 280, 1.5, Color.PINK);
+        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA, p1, "blinky");
+        Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE, p1, "clyde");
+        Ghost g3 = new Ghost(gameMap, 290, 280, 1.5, Color.PINK, p1, "pinky");
 
         // 5. Map cells (pellets, walls)
         for (int x = 0; x < 28; x++) {
@@ -145,31 +147,55 @@ public class GameSceneController implements Initializable {
             gameLoop = new AnimationTimer() {
                 @Override
                 public void handle(long now) {
-                    long deltaMillis = (now - lastTimerUpdateNanos) / 1_000_000;
-                    if (deltaMillis > 0) {
-                        elapsedTimerMillis += deltaMillis;
-                        lastTimerUpdateNanos = now;
-                        updateTimerDisplay();
+                        long deltaMillis = (now - lastTimerUpdateNanos) / 1_000_000;
+                        if (deltaMillis > 0) {
+                            lastTimerUpdateNanos = now;
+
+                            if (state.equals("ACTIVE")) {
+                                elapsedTimerMillis += deltaMillis;
+                                updateTimerDisplay();
+
+                                p1.update();
+                                // p2.update();
+                                g1.update();
+                                g2.update();
+                                g3.update();
+
+                                if (p1.currentCol == g1.getGridX() && p1.currentRow == g1.getGridY()) {
+                                    p1.collideGhost(g1);
+                                }
+                                if (p1.currentCol == g2.getGridX() && p1.currentRow == g2.getGridY()) {
+                                    p1.collideGhost(g2);
+                                }
+                                if (p1.currentCol == g3.getGridX() && p1.currentRow == g3.getGridY()) {
+                                    p1.collideGhost(g3);
+                                }
+
+                                // Sync HUD score
+                                updateHUD(p1.score, storedHighScore, currentLevel);
+
+                                // Sync lives display (only redraws when value changes)
+                                setLives(currentLives);
+
+                                // Win/lose check
+                                if (p1.state.equals("DEAD") && !state.equals("LOSE")) {
+                                    state = "LOSE";
+                                    stop();
+                                    handleLose(p1);
+                                    return;
+                                }
+
+                                if (allPelletsConsumed()) {
+                                    if (!state.equals("WIN")) {
+                                        state = "WIN";
+                                        stop();
+                                        handleWin();
+                                        return;
+                                    }
+                                }
+                            }
+                        }
                     }
-
-                    p1.update();
-                    // p2.update();
-                    g1.update();
-                    g2.update();
-                    g3.update();
-
-                    // Sync HUD score
-                    updateHUD(p1.score, storedHighScore, currentLevel);
-
-                    // Sync lives display (only redraws when value changes)
-                    setLives(currentLives);
-
-                    // Win/lose check
-                    if (p1.state.equals("DEAD")) /* || p2.state.equals("DEAD") */ {
-                        stop();
-                        triggerGameOver();
-                    }
-                }
             };
             gameLoop.start();
         });
@@ -247,11 +273,11 @@ public class GameSceneController implements Initializable {
 
     // ── Pause ─────────────────────────────────────────────────────
     @FXML private void onPause() {
-        paused = !paused;
-        pauseOverlay.setVisible(paused);
-        pauseOverlay.setManaged(paused);
-        if (paused) { if (gameLoop != null) gameLoop.stop();  }
-        else        { if (gameLoop != null) gameLoop.start(); }
+        // Enter PAUSED state; stop game rules
+        state = "PAUSED";
+        pauseOverlay.setVisible(true);
+        pauseOverlay.setManaged(true);
+        if (gameLoop != null) gameLoop.stop();
     }
 
     private void updateTimerDisplay() {
@@ -259,13 +285,50 @@ public class GameSceneController implements Initializable {
     }
 
     @FXML private void onResume() {
-        paused = false;
+        // Resume the game from PAUSED
+        state = "ACTIVE";
         pauseOverlay.setVisible(false);
         pauseOverlay.setManaged(false);
         if (gameLoop != null) {
             lastTimerUpdateNanos = System.nanoTime();
             gameLoop.start();
         }
+    }
+
+    // Check whether any pellets remain on the map
+    private boolean allPelletsConsumed() {
+        if (this.gameMap == null) return false;
+        for (int x = 0; x < this.gameMap.getCols(); x++) {
+            for (int y = 0; y < this.gameMap.getRows(); y++) {
+                Cell cell = this.gameMap.getCell(x, y);
+                if (cell instanceof PelletCell) {
+                    if (((PelletCell) cell).getPellet().state.equals("ACTIVE")) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private void handleLose(Player p) {
+        // Game rules already stopped; play death animation after short delay,
+        // then navigate to Game Over screen.
+        PauseTransition beforeDie = new PauseTransition(Duration.millis(300));
+        beforeDie.setOnFinished(e -> p.die());
+
+        PauseTransition toStats = new PauseTransition(Duration.millis(1200));
+        toStats.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel));
+
+        SequentialTransition seq = new SequentialTransition(beforeDie, toStats);
+        seq.play();
+    }
+
+    private void handleWin() {
+        // Brief win delay/sound then show statistics
+        PauseTransition winDelay = new PauseTransition(Duration.millis(800));
+        winDelay.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel));
+        winDelay.play();
     }
 
     // ── Navigation ────────────────────────────────────────────────

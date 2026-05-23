@@ -127,12 +127,19 @@ public class MultiplayerSceneController implements Initializable {
         MapLoader.loadMap(gameMap, "resources\\maps\\level1.txt");
         MapLoader.connectWallCells(gameMap);
 
-        Player p1 = new Player(gameMap, 1.5, 1, 9, 17);
-        Player p2 = new Player(gameMap, 1.5, 2, 18, 17);
+        final Player p1;
+        final Player p2;
+        try {
+            p1 = new Player(gameMap, 1.5, 1, 9, 17);
+            p2 = new Player(gameMap, 1.5, 2, 18, 17);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
 
-        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA);
-        Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE);
-        Ghost g3 = new Ghost(gameMap, 270, 280, 1.5, Color.PINK);
+        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA, p1, "blinky");
+        Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE, p1, "clyde");
+        Ghost g3 = new Ghost(gameMap, 290, 280, 1.5, Color.PINK, p1, "pinky");
 
         p1.setInput(keysPressed);
         p2.setInput(keysPressed);

@@ -33,10 +33,10 @@ public class MainMenuController implements Initializable {
     @FXML private Label     ghostBlinky, ghostPinky, ghostInky, ghostClyde;
 
     private static final String[] GHOST_COLORS = {
-        "-fx-text-fill:rgba(255,59,59,0.22);",
-        "-fx-text-fill:rgba(255,182,255,0.22);",
-        "-fx-text-fill:rgba(77,204,255,0.22);",
-        "-fx-text-fill:rgba(255,165,0,0.22);"
+        "-fx-text-fill:rgba(255, 59, 59, 0.9);",
+        "-fx-text-fill:rgba(255,182,255,0.9);",
+        "-fx-text-fill:rgba(77,204,255,0.9);",
+        "-fx-text-fill:rgba(255,165,0,0.9);"
     };
 
     @Override
@@ -126,7 +126,7 @@ public class MainMenuController implements Initializable {
 
     // ── Navigation handlers ───────────────────────────────────────
     @FXML private void onPlay()        { SceneManager.goTo(SceneManager.GAME); }
-    @FXML private void onHostGame()    { SceneManager.goTo(SceneManager.GAME); }
+    @FXML private void onHostGame()    { SceneManager.goTo(SceneManager.MULTIPLAYER); }
     @FXML private void onLeaderboard() { System.out.println("[MENU] Leaderboard – TODO"); }
 
     @FXML private void onQuit() {
