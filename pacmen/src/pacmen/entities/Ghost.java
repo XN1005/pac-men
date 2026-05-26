@@ -17,9 +17,11 @@ public class Ghost extends Entity {
     private final String ghostName;
     private Player targetPlayer;
     public Circle sprite;
+    boolean already_eaten;
 
     public Ghost(GameMap map, double x, double y, double speed, Color color) {
         this(map, x, y, speed, color, null, "blinky");
+        this.already_eaten = false;
     }
 
     public Ghost(GameMap map, double x, double y, double speed, Color color, Player targetPlayer, String ghostName) {

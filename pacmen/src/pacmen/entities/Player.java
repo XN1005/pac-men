@@ -212,7 +212,7 @@ public class Player extends Entity implements Collision {
     public void collideGhost(Ghost ghost) {
         if (this.state.equals("POWER_UP")) {
             if (ghost.currentState != Ghost.GhostState.EATEN) {
-                already_eaten = true;
+                ghost.already_eaten = true;
                 this.score += 200 * (int) (Math.pow(2, this.combo));    // stated requirement
                 this.combo++;
             }
