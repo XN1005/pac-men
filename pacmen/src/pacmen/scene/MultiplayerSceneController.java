@@ -158,11 +158,20 @@ public class MultiplayerSceneController implements Initializable {
                             elapsedTimerMillis += deltaMillis;
                             updateTimerDisplay();
 
+<<<<<<< HEAD
                             p1.update();
                             p2.update();
                             g1.update();
                             g2.update();
                             g3.update();
+=======
+                                p1.update();
+                                p2.update();
+                                g1.update();
+                                g2.update();
+                                g3.update();
+                                g4.update();
+>>>>>>> 03f73b9a342976204f87103e32467042182d7507
 
                             // Collision matrix boundary evaluations
                             if (p1.currentCol == g1.getGridX() && p1.currentRow == g1.getGridY()) p1.collideGhost(g1);

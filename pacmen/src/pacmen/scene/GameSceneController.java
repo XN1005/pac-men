@@ -153,6 +153,7 @@ public class GameSceneController implements Initializable {
                             elapsedTimerMillis += deltaMillis;
                             updateTimerDisplay();
 
+<<<<<<< HEAD
                             p1.update();
                             g1.update();
                             g2.update();
@@ -171,6 +172,42 @@ public class GameSceneController implements Initializable {
                                 p1.collideGhost(g3);
                                 g3.collidePlayer(p1);
                             }
+=======
+                                p1.update();
+                                g1.update();
+                                g2.update();
+                                g3.update();
+                                
+                                if (p1.state.equals("POWER_UP")) {
+                                    if (!g1.already_eaten && !g1.already_frightened) {
+                                        g1.already_frightened = true;
+                                        g1.setCurrentState(Ghost.GhostState.FRIGHTENED);
+                                    }
+                                    if (!g2.already_eaten && !g2.already_frightened) {
+                                        g2.already_frightened = true;
+                                        g2.setCurrentState(Ghost.GhostState.FRIGHTENED);
+                                    }
+                                    if (!g3.already_eaten && !g3.already_frightened) {
+                                        g3.already_frightened = true;
+                                        g3.setCurrentState(Ghost.GhostState.FRIGHTENED);
+                                    }
+                                }
+                                else {
+                                    g1.already_frightened = false;
+                                    g2.already_frightened = false;
+                                    g3.already_frightened = false;
+
+                                    if (g1.currentState == Ghost.GhostState.FRIGHTENED) {
+                                        g1.setCurrentState(Ghost.GhostState.CHASE);
+                                    }
+                                    if (g2.currentState == Ghost.GhostState.FRIGHTENED) {
+                                        g2.setCurrentState(Ghost.GhostState.CHASE);
+                                    }
+                                    if (g3.currentState == Ghost.GhostState.FRIGHTENED) {
+                                        g3.setCurrentState(Ghost.GhostState.CHASE);
+                                    }
+                                }
+>>>>>>> 03f73b9a342976204f87103e32467042182d7507
 
                             // Sync HUD score 
                             updateHUD(p1.score, storedHighScore, currentLevel);
@@ -268,6 +305,7 @@ public class GameSceneController implements Initializable {
 
     /** Stops the loop and navigates to the Game Over screen.  */
     public void triggerGameOver() {
+        // Trigger save score method
         if (gameLoop != null) gameLoop.stop();
         SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2");
     }

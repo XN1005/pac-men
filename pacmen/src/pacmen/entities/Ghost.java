@@ -17,11 +17,15 @@ public class Ghost extends Entity {
     private final String ghostName;
     private Player targetPlayer;
     public Circle sprite;
-    boolean already_eaten;
+
+    // Acts as switchers
+    public boolean already_eaten; 
+    public boolean already_frightened;
 
     public Ghost(GameMap map, double x, double y, double speed, Color color) {
         this(map, x, y, speed, color, null, "blinky");
         this.already_eaten = false;
+        this.already_frightened = false;
     }
 
     public Ghost(GameMap map, double x, double y, double speed, Color color, Player targetPlayer, String ghostName) {
@@ -61,18 +65,23 @@ public class Ghost extends Entity {
         switch (currentState) {
             case SCATTER:
                 target = TargetingStrategy.getScatterTarget(ghostName, map.getCols(), map.getRows());
+                speed = this.baseSpeed;
                 break;
             case CHASE:
                 target = getChaseTarget();
+                speed = this.baseSpeed;
                 break;
             case FRIGHTENED:
                 target = TargetingStrategy.getScatterTarget(ghostName, map.getCols(), map.getRows());
+                speed = this.baseSpeed;
                 break;
             case EATEN:
                 target = TargetingStrategy.getGhostHouseTarget(map.getCols(), map.getRows());
+                speed = this.baseSpeed * 2;
                 break;
             default:
                 target = TargetingStrategy.getScatterTarget(ghostName, map.getCols(), map.getRows());
+                speed = this.baseSpeed;
                 break;
         }
 
