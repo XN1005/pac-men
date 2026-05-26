@@ -28,17 +28,14 @@ public class BFSPathfinder {
             int currentDirection,
             boolean allowReverse
     ) {
-        System.out.println("BFS: " + targetX + " " + targetY);
         if (map == null || ghost == null) {
             return fixDirection(currentDirection);
         }
-
         currentDirection = fixDirection(currentDirection);
 
         if (!isInsideMap(map, startX, startY)) {
             return currentDirection;
         }
-
         targetX = clamp(targetX, 0, map.getCols() - 1);
         targetY = clamp(targetY, 0, map.getRows() - 1);
 
@@ -54,7 +51,7 @@ public class BFSPathfinder {
         Queue<int[]> queue = new LinkedList<int[]>();
         queue.add(new int[]{startX, startY});
         visited[startY][startX] = true;
-
+        
         while (!queue.isEmpty()) {
             int[] current = queue.poll();
 
@@ -63,11 +60,9 @@ public class BFSPathfinder {
 
             if (currentX == targetX && currentY == targetY) {
                 int answer = firstDirection[currentY][currentX];
-
                 if (answer == -1) {
-                    return currentDirection;
+                    return currentDirection;  
                 }
-
                 return answer;
             }
 
@@ -105,7 +100,6 @@ public class BFSPathfinder {
                 queue.add(new int[]{nextX, nextY});
             }
         }
-        // System.out.print("OK");
         return chooseGreedyDirection(
                 map,
                 ghost,
@@ -160,7 +154,6 @@ public class BFSPathfinder {
                 bestDirection = direction;
             }
         }
-
         return bestDirection;
     }
 
@@ -195,17 +188,17 @@ public class BFSPathfinder {
             }
         }
 
-        if (legalDirections.isEmpty()) {
-            int reverse = opposite(currentDirection);
+        // if (legalDirections.isEmpty()) {
+        //     int reverse = opposite(currentDirection);
 
-            int nextX = gridX + DX[reverse];
-            int nextY = gridY + DY[reverse];
+        //     int nextX = gridX + DX[reverse];
+        //     int nextY = gridY + DY[reverse];
 
-            if (isInsideMap(map, nextX, nextY)
-                    && map.isMoveValid(ghost, nextX, nextY)) {
-                legalDirections.add(reverse);
-            }
-        }
+        //     if (isInsideMap(map, nextX, nextY)
+        //             && map.isMoveValid(ghost, nextX, nextY)) {
+        //         legalDirections.add(reverse);
+        //     }
+        // }
 
         return legalDirections;
     }

@@ -13,6 +13,7 @@ public class ScoreManager {
     private String player2Name = "Player2";
     private int player1Score = 0;
     private int player2Score = 0;
+    private int selectedMapLevel = 1;
 
     private static final String DATA_FILE = "resources/data/data.txt";
     private Map<String, Integer> globalScores;
@@ -31,12 +32,28 @@ public class ScoreManager {
 
     // active game player names and scoring
     public void setPlayerNames(String p1Name, String p2Name) {
-        if (p1Name != null && !p1Name.trim().isEmpty()) this.player1Name = p1Name.trim();
-        if (p2Name != null && !p2Name.trim().isEmpty()) this.player2Name = p2Name.trim();
+        String cleanP1 = sanitizeName(p1Name);
+        String cleanP2 = sanitizeName(p2Name);
+        if (cleanP1 != null) this.player1Name = cleanP1;
+        if (cleanP2 != null) this.player2Name = cleanP2;
     }
 
     public String getPlayer1Name() { return player1Name; }
     public String getPlayer2Name() { return player2Name; }
+
+    public void setSelectedMapLevel(int level) {
+        this.selectedMapLevel = level == 2 ? 2 : 1;
+    }
+
+    public int getSelectedMapLevel() {
+        return selectedMapLevel;
+    }
+
+    private String sanitizeName(String name) {
+        if (name == null) return null;
+        String cleaned = name.replaceAll("\\s+", "");
+        return cleaned.isBlank() ? null : cleaned;
+    }
 
     public void addScore(int playerNum, int points) {
         if (playerNum == 1) {

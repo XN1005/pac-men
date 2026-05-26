@@ -42,7 +42,10 @@ public class MultiplayerSceneController implements Initializable {
     @FXML private Label     highScoreLabel;
     @FXML private Label     levelLabel;
     @FXML private Label     timerLabel;
-    @FXML private HBox      livesBox;
+    @FXML private Label     p1NameLabel;
+    @FXML private Label     p2NameLabel;
+    @FXML private Label     p2ScoreLabel;
+    @FXML private Label     currentLeadLabel;
 
     private long elapsedTimerMillis = 0;
     private long lastTimerUpdateNanos = 0;
@@ -51,8 +54,9 @@ public class MultiplayerSceneController implements Initializable {
     private String     state           = "ACTIVE";    
     private GameMap    gameMap         = null;
     private int        currentScore    = 0;
+    private int        currentP2Score  = 0;
     private int        currentLives    = 1;
-    private int        currentLevel    = 2;
+    private int        currentLevel    = 1;
     private static int storedHighScore = 0;
     
     // Track localized player session strings
@@ -70,9 +74,9 @@ public class MultiplayerSceneController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         storedHighScore = ScoreManager.getInstance().getAbsoluteHighScore();
-        
-        buildLivesDisplay(currentLives);
-        updateHUD(0, storedHighScore, 2);
+        currentLevel = ScoreManager.getInstance().getSelectedMapLevel();
+
+        updateHUD(0, 0, currentLevel);
 
         rootPane.setFocusTraversable(true);
         rootPane.setOnKeyPressed(e -> keysPressed.add(e.getCode()));
@@ -97,12 +101,22 @@ public class MultiplayerSceneController implements Initializable {
         // 1. Gather configured tracking details out of global instances
         activePlayer1Name = ScoreManager.getInstance().getPlayer1Name();
         activePlayer2Name = ScoreManager.getInstance().getPlayer2Name();
+        currentLevel = ScoreManager.getInstance().getSelectedMapLevel();
+
+        if (p1NameLabel != null) {
+            p1NameLabel.setText(activePlayer1Name.toUpperCase());
+        }
+        if (p2NameLabel != null) {
+            p2NameLabel.setText(activePlayer2Name.toUpperCase());
+        }
 
         // 2. Map
         GameMap gameMap = new GameMap();
         this.gameMap = gameMap;
-        MapLoader.loadMap(gameMap, "resources/maps/level1.txt");
+        String mapPath = currentLevel == 2 ? "resources/maps/level2.txt" : "resources/maps/level1.txt";
+        MapLoader.loadMap(gameMap, mapPath);
         MapLoader.connectWallCells(gameMap);
+        fitMapToView();
 
         // 3. Players
         final Player[] players = new Player[2];
@@ -119,10 +133,14 @@ public class MultiplayerSceneController implements Initializable {
         final Player p2 = players[1];
 
         // 4. Ghosts
-        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.RED, p1, "blinky");
-        Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE, p1, "clyde");
-        Ghost g3 = new Ghost(gameMap, 290, 280, 1.5, Color.PINK, p1, "pinky");
-        Ghost g4 = new Ghost(gameMap, 230, 280, 1.5, Color.AQUA, p2, "inky");
+        Ghost g1 = new Ghost(gameMap, 250, 300, 1.5, Color.RED, p1, "blinky");
+        Ghost g2 = new Ghost(gameMap, 230, 260, 1.5, Color.ORANGE, p1, "clyde");
+        Ghost g3 = new Ghost(gameMap, 310, 300, 1.5, Color.PINK, p1, "pinky");
+        Ghost g4 = new Ghost(gameMap, 330, 260, 1.5, Color.AQUA, p2, "inky");
+        g1.attachToPane(gamePane);
+        g2.attachToPane(gamePane);
+        g3.attachToPane(gamePane);
+        g4.attachToPane(gamePane);
 
         // 5. Map cells
         for (int x = 0; x < 28; x++) {
@@ -140,6 +158,7 @@ public class MultiplayerSceneController implements Initializable {
         // 7. Render components
         gamePane.getChildren().addAll(p1.sprite, p2.sprite);
         gamePane.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite, g4.sprite);
+        Platform.runLater(this::fitMapToView);
 
         // 8. Countdown loop
         startCountdown(() -> {
@@ -163,22 +182,46 @@ public class MultiplayerSceneController implements Initializable {
                             g1.update();
                             g2.update();
                             g3.update();
+                            g4.update();
 
                             // Collision matrix boundary evaluations
-                            if (p1.currentCol == g1.getGridX() && p1.currentRow == g1.getGridY()) p1.collideGhost(g1);
-                            if (p1.currentCol == g2.getGridX() && p1.currentRow == g2.getGridY()) p1.collideGhost(g2);
-                            if (p1.currentCol == g3.getGridX() && p1.currentRow == g3.getGridY()) p1.collideGhost(g3);
-                            if (p1.currentCol == g4.getGridX() && p1.currentRow == g4.getGridY()) p1.collideGhost(g4);
-                            
-                            if (p2.currentCol == g1.getGridX() && p2.currentRow == g1.getGridY()) p2.collideGhost(g1);
-                            if (p2.currentCol == g2.getGridX() && p2.currentRow == g2.getGridY()) p2.collideGhost(g2);
-                            if (p2.currentCol == g3.getGridX() && p2.currentRow == g3.getGridY()) p2.collideGhost(g3);
-                            if (p2.currentCol == g4.getGridX() && p2.currentRow == g4.getGridY()) p2.collideGhost(g4);
+                            if (Math.pow(Math.pow(p1.currentCol - g1.getGridX(), 2) + Math.pow(p1.currentRow - g1.getGridY(), 2), 0.5) <= 1) {
+                                p1.collideGhost(g1);
+                                g1.collidePlayer(p1);
+                            }
+                            if (Math.pow(Math.pow(p1.currentCol - g2.getGridX(), 2) + Math.pow(p1.currentRow - g2.getGridY(), 2), 0.5) <= 1) {
+                                p1.collideGhost(g2);
+                                g2.collidePlayer(p1);
+                            }
+                            if (Math.pow(Math.pow(p1.currentCol - g3.getGridX(), 2) + Math.pow(p1.currentRow - g3.getGridY(), 2), 0.5) <= 1) {
+                                p1.collideGhost(g3);
+                                g3.collidePlayer(p1);
+                            }
+                            if (Math.pow(Math.pow(p1.currentCol - g4.getGridX(), 2) + Math.pow(p1.currentRow - g4.getGridY(), 2), 0.5) <= 1) {
+                                p1.collideGhost(g4);
+                                g4.collidePlayer(p1);
+                            }
 
-                            updateHUD(p1.score, storedHighScore, currentLevel);
-                            setLives(currentLives);
+                            if (Math.pow(Math.pow(p2.currentCol - g1.getGridX(), 2) + Math.pow(p2.currentRow - g1.getGridY(), 2), 0.5) <= 1) {
+                                p2.collideGhost(g1);
+                                g1.collidePlayer(p2);
+                            }
+                            if (Math.pow(Math.pow(p2.currentCol - g2.getGridX(), 2) + Math.pow(p2.currentRow - g2.getGridY(), 2), 0.5) <= 1) {
+                                p2.collideGhost(g2);
+                                g2.collidePlayer(p2);
+                            }
+                            if (Math.pow(Math.pow(p2.currentCol - g3.getGridX(), 2) + Math.pow(p2.currentRow - g3.getGridY(), 2), 0.5) <= 1) {
+                                p2.collideGhost(g3);
+                                g3.collidePlayer(p2);
+                            }
+                            if (Math.pow(Math.pow(p2.currentCol - g4.getGridX(), 2) + Math.pow(p2.currentRow - g4.getGridY(), 2), 0.5) <= 1) {
+                                p2.collideGhost(g4);
+                                g4.collidePlayer(p2);
+                            }
 
-                            if (p1.state.equals("DEAD") && !state.equals("LOSE")) {
+                            updateHUD(p1.score, p2.score, currentLevel);
+
+                            if (p1.state.equals("DEAD") && p2.state.equals("DEAD") && !state.equals("LOSE")) {
                                 state = "LOSE";
                                 stop();
                                 handleLose(p1);
@@ -202,29 +245,35 @@ public class MultiplayerSceneController implements Initializable {
     }
 
     // ── HUD ───────────────────────────────────────────────────────
-    public void updateHUD(int score, int highScore, int level) {
-        currentScore = score;
+    public void updateHUD(int p1Score, int p2Score, int level) {
+        currentScore = p1Score;
+        currentP2Score = p2Score;
         currentLevel = level;
-        if (score > storedHighScore) storedHighScore = score;
-        scoreLabel.setText(String.format("%06d", score));
-        highScoreLabel.setText(String.format("%06d", Math.max(highScore, storedHighScore)));
+        scoreLabel.setText(String.format("%06d", p1Score));
+        p2ScoreLabel.setText(String.format("%06d", p2Score));
+        currentLeadLabel.setText(String.format("%+06d", p1Score - p2Score));
         levelLabel.setText(String.valueOf(level));
     }
 
-    public void setLives(int lives) {
-        if (lives != currentLives) {
-            currentLives = lives;
-            buildLivesDisplay(lives);
+    private void fitMapToView() {
+        if (gamePane == null || canvasWrapper == null || gameMap == null) {
+            return;
         }
-    }
 
-    private void buildLivesDisplay(int lives) {
-        livesBox.getChildren().clear();
-        for (int i = 0; i < lives; i++) {
-            Label dot = new Label("●");
-            dot.setStyle("-fx-font-size:20px; -fx-text-fill:#FFD700;");
-            livesBox.getChildren().add(dot);
+        double mapWidth = gameMap.getCols() * 20.0;
+        double mapHeight = gameMap.getRows() * 20.0;
+        double availableWidth = canvasWrapper.getWidth();
+        double availableHeight = canvasWrapper.getHeight();
+
+        if (availableWidth <= 0 || availableHeight <= 0) {
+            return;
         }
+
+        double scale = Math.min(availableWidth / mapWidth, availableHeight / mapHeight);
+        gamePane.setScaleX(scale);
+        gamePane.setScaleY(scale);
+        gamePane.setTranslateX((availableWidth - (mapWidth * scale)) / 2.0);
+        gamePane.setTranslateY((availableHeight - (mapHeight * scale)) / 2.0);
     }
 
     // ── Countdown ─────────────────────────────────────────────────
@@ -260,7 +309,7 @@ public class MultiplayerSceneController implements Initializable {
     // ── Game over triggers ────────────────────────────────────────
     public void triggerGameOver() {
         if (gameLoop != null) gameLoop.stop();
-        SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, activePlayer2Name);
+        SceneManager.goToGameOver(currentScore, currentP2Score, elapsedTimerMillis, currentLevel, activePlayer1Name, activePlayer2Name);
     }
 
     @FXML 
@@ -304,14 +353,14 @@ public class MultiplayerSceneController implements Initializable {
         beforeDie.setOnFinished(e -> p.die());
 
         PauseTransition toStats = new PauseTransition(Duration.millis(1200));
-        toStats.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, activePlayer2Name));
+        toStats.setOnFinished(e -> SceneManager.goToGameOver(currentScore, currentP2Score, elapsedTimerMillis, currentLevel, activePlayer1Name, activePlayer2Name));
 
         new SequentialTransition(beforeDie, toStats).play();
     }
 
     private void handleWin() {
         PauseTransition winDelay = new PauseTransition(Duration.millis(800));
-        winDelay.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, activePlayer2Name));
+        winDelay.setOnFinished(e -> SceneManager.goToGameOver(currentScore, currentP2Score, elapsedTimerMillis, currentLevel, activePlayer1Name, activePlayer2Name));
         winDelay.play();
     }
 

@@ -51,7 +51,7 @@ public class GameSceneController implements Initializable {
     private GameMap    gameMap         = null;
     private int        currentScore    = 0;
     private int        currentLives    = 1;
-    private int        currentLevel    = 2;
+    private int        currentLevel    = 1;
     private static int storedHighScore = 0;
     private String     activePlayer1Name = "Player1"; 
 
@@ -63,9 +63,10 @@ public class GameSceneController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         storedHighScore = ScoreManager.getInstance().getAbsoluteHighScore();
-        
+        currentLevel = ScoreManager.getInstance().getSelectedMapLevel();
+
         buildLivesDisplay(currentLives);
-        updateHUD(0, storedHighScore, 2);
+        updateHUD(0, storedHighScore, currentLevel);
 
         rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
@@ -81,18 +82,21 @@ public class GameSceneController implements Initializable {
         canvasWrapper.getChildren().add(gamePane);
 
         activePlayer1Name = ScoreManager.getInstance().getPlayer1Name();
+        currentLevel = ScoreManager.getInstance().getSelectedMapLevel();
+        String mapPath = currentLevel == 2 ? "resources/maps/level2.txt" : "resources/maps/level1.txt";
         if (p1NameLabel != null) {
             p1NameLabel.setText(activePlayer1Name.toUpperCase());
         }
 
         GameMap gameMap = new GameMap();
         this.gameMap = gameMap;
-        MapLoader.loadMap(gameMap, "resources/maps/level2.txt");
+        MapLoader.loadMap(gameMap, mapPath);
         MapLoader.connectWallCells(gameMap);
+        fitMapToView();
 
         final Player[] players = new Player[2];
         try {
-            players[0] = new Player(gameMap, 1.5, 1, 20, 14, activePlayer1Name);
+            players[0] = new Player(gameMap, 1.55, 1, 14, 17, activePlayer1Name);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -100,9 +104,12 @@ public class GameSceneController implements Initializable {
         
         final Player p1 = players[0];
 
-        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA, p1, "blinky");
-        Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE, p1, "clyde");
-        Ghost g3 = new Ghost(gameMap, 290, 280, 1.5, Color.PINK, p1, "pinky");
+        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.RED, p1, "blinky");
+        Ghost g2 = new Ghost(gameMap, 290, 280, 1.5, Color.ORANGE, p1, "clyde");
+        Ghost g3 = new Ghost(gameMap, 330, 280, 1.5, Color.PINK, p1, "pinky");
+        g1.attachToPane(gamePane);
+        g2.attachToPane(gamePane);
+        g3.attachToPane(gamePane);
 
         for (int x = 0; x < 28; x++) {
             for (int y = 0; y < 36; y++) {
@@ -118,6 +125,7 @@ public class GameSceneController implements Initializable {
 
         gamePane.getChildren().addAll(p1.sprite);
         gamePane.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite);
+        Platform.runLater(this::fitMapToView);
 
         startCountdown(() -> {
             elapsedTimerMillis = 0;
@@ -188,6 +196,27 @@ public class GameSceneController implements Initializable {
         levelLabel.setText(String.valueOf(level));
     }
 
+    private void fitMapToView() {
+        if (gamePane == null || canvasWrapper == null || gameMap == null) {
+            return;
+        }
+
+        double mapWidth = gameMap.getCols() * 20.0;
+        double mapHeight = gameMap.getRows() * 20.0;
+        double availableWidth = canvasWrapper.getWidth();
+        double availableHeight = canvasWrapper.getHeight();
+
+        if (availableWidth <= 0 || availableHeight <= 0) {
+            return;
+        }
+
+        double scale = Math.min(availableWidth / mapWidth, availableHeight / mapHeight);
+        gamePane.setScaleX(scale);
+        gamePane.setScaleY(scale);
+        gamePane.setTranslateX((availableWidth - (mapWidth * scale)) / 2.0);
+        gamePane.setTranslateY((availableHeight - (mapHeight * scale)) / 2.0);
+    }
+
     public void setLives(int lives) {
         if (lives != currentLives) {
             currentLives = lives;
@@ -236,7 +265,7 @@ public class GameSceneController implements Initializable {
 
     public void triggerGameOver() {
         if (gameLoop != null) gameLoop.stop();
-        SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2");
+        SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2", "LOSE");
     }
 
     @FXML 
@@ -282,7 +311,7 @@ public class GameSceneController implements Initializable {
         beforeDie.setOnFinished(e -> p.die());
 
         PauseTransition toStats = new PauseTransition(Duration.millis(1200));
-        toStats.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2"));
+        toStats.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2", "LOSE"));
 
         SequentialTransition seq = new SequentialTransition(beforeDie, toStats);
         seq.play();
@@ -290,7 +319,7 @@ public class GameSceneController implements Initializable {
 
     private void handleWin() {
         PauseTransition winDelay = new PauseTransition(Duration.millis(800));
-        winDelay.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2"));
+        winDelay.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2", "WIN"));
         winDelay.play();
     }
 
