@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.canvas.*?>
 <?import javafx.geometry.*?>
 
 <StackPane xmlns="http://javafx.com/javafx/21"
@@ -14,123 +15,79 @@
     <!-- CRT background -->
     <Pane styleClass="bg-pane" maxWidth="Infinity" maxHeight="Infinity" mouseTransparent="true"/>
 
-    <!-- ── MAIN LAYOUT ── -->
-    <VBox spacing="0" style="-fx-padding:36 60 28 60;">
+    <!-- ── MAIN GAME LAYOUT ── -->
+    <VBox spacing="0">
 
-        <!-- HEADER -->
-        <HBox alignment="CENTER_LEFT" spacing="0">
-            <Label styleClass="scene-title" text="MULTIPLAYER" HBox.hgrow="ALWAYS"/>
-            <Button styleClass="btn-ghost" text="↩  BACK" prefWidth="120"
-                    onAction="#onBack"/>
+        <!-- TOP HUD BAR -->
+        <HBox fx:id="hudBar" styleClass="panel-box" alignment="CENTER_LEFT" spacing="0"
+              prefHeight="56" minHeight="56">
+            <padding><Insets top="0" bottom="0" left="20" right="20"/></padding>
+
+            <!-- Score -->
+            <VBox alignment="CENTER_LEFT" spacing="3" HBox.hgrow="ALWAYS">
+                <Label styleClass="hud-label" text="SCORE"/>
+                <Label fx:id="scoreLabel" styleClass="hud-value" text="000000"/>
+            </VBox>
+
+            <!-- Level -->
+            <VBox alignment="CENTER" spacing="3" HBox.hgrow="ALWAYS">
+                <Label styleClass="hud-label" text="LEVEL"/>
+                <Label fx:id="levelLabel" styleClass="hud-value" text="1"/>
+            </VBox>
+
+            <!-- Time -->
+            <VBox alignment="CENTER" spacing="3" HBox.hgrow="ALWAYS">
+                <Label styleClass="hud-label" text="TIME"/>
+                <Label fx:id="timerLabel" styleClass="hud-value" text="00:00"/>
+            </VBox>
+
+            <!-- Lives -->
+            <VBox alignment="CENTER" spacing="3" HBox.hgrow="ALWAYS">
+                <Label styleClass="hud-label" text="LIVES"/>
+                <HBox fx:id="livesBox" alignment="CENTER" spacing="4"/>
+            </VBox>
+
+            <!-- High Score -->
+            <VBox alignment="CENTER_RIGHT" spacing="3" HBox.hgrow="ALWAYS">
+                <Label styleClass="hud-label" text="HIGH SCORE"/>
+                <Label fx:id="highScoreLabel" styleClass="hud-value" text="000000"/>
+            </VBox>
+
+            <!-- Pause Button -->
+            <Button fx:id="btnPause"
+                    styleClass="btn-ghost"
+                    text="⏸ PAUSE"
+                    prefWidth="110"
+                    onAction="#onPause"/>
         </HBox>
-        <Label styleClass="scene-subtitle" text="HOST OR JOIN A GAME" style="-fx-padding:4 0 16 0;"/>
 
-        <!-- HOST / JOIN TAB STRIP -->
-        <HBox spacing="0" prefHeight="48" maxWidth="Infinity">
-            <Button fx:id="tabHost"
-                    text="HOST GAME"
-                    prefWidth="200" prefHeight="48"
-                    style="-fx-font-family:'Press Start 2P',monospace;-fx-font-size:10px;
-                           -fx-background-color:#FFD700;-fx-text-fill:#050810;
-                           -fx-background-radius:0;-fx-border-radius:0;-fx-cursor:hand;
-                           -fx-border-color:transparent;"
-                    onAction="#onTabHost"/>
-            <Button fx:id="tabJoin"
-                    text="JOIN GAME"
-                    prefWidth="200" prefHeight="48"
-                    style="-fx-font-family:'Press Start 2P',monospace;-fx-font-size:10px;
-                           -fx-background-color:transparent;-fx-text-fill:rgba(255,215,0,0.55);
-                           -fx-background-radius:0;-fx-border-radius:0;-fx-cursor:hand;
-                           -fx-border-color:rgba(255,215,0,0.25);-fx-border-width:0 0 2 0;"
-                    onAction="#onTabJoin"/>
-        </HBox>
-
-        <Region styleClass="neon-divider" maxWidth="Infinity"/>
-        <Region prefHeight="18"/>
-
-        <!-- ── HOST PANEL ── -->
-        <VBox fx:id="hostPanel" spacing="14" visible="true" managed="true">
-            <HBox spacing="16" alignment="CENTER_LEFT">
-                <VBox spacing="6" HBox.hgrow="ALWAYS">
-                    <Label styleClass="stat-label" text="YOUR IP ADDRESS"/>
-                    <Label fx:id="ipLabel" styleClass="stat-value" text="—"/>
-                </VBox>
-                <VBox spacing="6">
-                    <Label styleClass="stat-label" text="PORT"/>
-                    <Label fx:id="portLabel" styleClass="stat-value" text="25565"/>
-                </VBox>
-                <Button styleClass="btn-cyan" text="⧉ COPY IP" prefWidth="130"
-                        onAction="#onCopyIp"/>
-            </HBox>
-
-            <Region prefHeight="4"/>
-
-            <!-- Lobby player list -->
-            <Label styleClass="stat-label" text="LOBBY"/>
-            <VBox fx:id="lobbyList" styleClass="panel-box" spacing="0"
-                  minHeight="160" maxHeight="160"/>
-
-            <HBox spacing="12" alignment="CENTER_RIGHT">
-                <Label fx:id="playerCountLabel" styleClass="footer-label"
-                       text="0 / 4 PLAYERS"/>
-                <Button fx:id="btnStartGame"
-                        styleClass="btn-primary"
-                        text="▶  START GAME"
-                        prefWidth="220"
-                        disable="true"
-                        onAction="#onStartGame"/>
-            </HBox>
-        </VBox>
-
-        <!-- ── JOIN PANEL ── -->
-        <VBox fx:id="joinPanel" spacing="14" visible="false" managed="false">
-            <HBox spacing="12" alignment="CENTER_LEFT">
-                <VBox spacing="6" HBox.hgrow="ALWAYS">
-                    <Label styleClass="stat-label" text="HOST IP ADDRESS"/>
-                    <TextField fx:id="ipField"
-                               promptText="e.g.  192.168.1.42"
-                               style="-fx-font-family:'Press Start 2P',monospace;
-                                      -fx-font-size:10px;-fx-background-color:rgba(0,20,60,0.8);
-                                      -fx-text-fill:#00FFFF;-fx-border-color:rgba(0,255,255,0.35);
-                                      -fx-border-width:2px;-fx-background-radius:0;
-                                      -fx-pref-height:44px;-fx-prompt-text-fill:rgba(0,255,255,0.3);"/>
-                </VBox>
-                <VBox spacing="6">
-                    <Label styleClass="stat-label" text="PORT"/>
-                    <TextField fx:id="portField"
-                               text="25565"
-                               prefWidth="100"
-                               style="-fx-font-family:'Press Start 2P',monospace;
-                                      -fx-font-size:10px;-fx-background-color:rgba(0,20,60,0.8);
-                                      -fx-text-fill:#00FFFF;-fx-border-color:rgba(0,255,255,0.35);
-                                      -fx-border-width:2px;-fx-background-radius:0;
-                                      -fx-pref-height:44px;-fx-prompt-text-fill:rgba(0,255,255,0.3);"/>
-                </VBox>
-                <Button styleClass="btn-cyan" text="⬡  CONNECT"
-                        prefWidth="160" style="-fx-padding:0;" prefHeight="44"
-                        onAction="#onConnect"/>
-            </HBox>
-
-            <!-- Connection status -->
-            <Label fx:id="connectionStatus" styleClass="footer-label" text=""/>
-
-            <Region prefHeight="4"/>
-
-            <!-- Lobby (once connected) -->
-            <Label styleClass="stat-label" text="LOBBY"/>
-            <VBox fx:id="joinLobbyList" styleClass="panel-box" spacing="0"
-                  minHeight="160" maxHeight="160"/>
-
-            <HBox alignment="CENTER_RIGHT">
-                <Button fx:id="btnReady"
-                        styleClass="btn-primary"
-                        text="✓  READY"
-                        prefWidth="220"
-                        disable="true"
-                        onAction="#onReady"/>
-            </HBox>
-        </VBox>
+        <!-- GAME CANVAS AREA -->
+        <StackPane fx:id="canvasWrapper" VBox.vgrow="ALWAYS">
+            <Canvas fx:id="gameCanvas" width="900" height="578"/>
+        </StackPane>
 
     </VBox>
+
+    <!-- ── PAUSE OVERLAY ── -->
+    <StackPane fx:id="pauseOverlay"
+               style="-fx-background-color: rgba(5,8,16,0.88);"
+               visible="false" managed="false">
+        <VBox alignment="CENTER" spacing="20">
+            <Label styleClass="scene-title" text="PAUSED"/>
+            <Region prefHeight="10"/>
+            <Button styleClass="btn-primary"  text="▶  RESUME"    prefWidth="300" onAction="#onResume"/>
+            <Button styleClass="btn-ghost"    text="↩  MAIN MENU" prefWidth="300" onAction="#onMainMenu"/>
+        </VBox>
+    </StackPane>
+
+    <!-- ── COUNTDOWN OVERLAY (3-2-1-GO) ── -->
+    <StackPane fx:id="countdownOverlay"
+               style="-fx-background-color: rgba(5,8,16,0.6);"
+               mouseTransparent="true">
+        <Label fx:id="countdownLabel"
+               style="-fx-font-family:'Press Start 2P',monospace;
+                      -fx-font-size:96px; -fx-text-fill:#FFD700;
+                      -fx-effect:dropshadow(gaussian,rgba(255,215,0,0.95),40,0.7,0,0);"/>
+    </StackPane>
 
 </StackPane>

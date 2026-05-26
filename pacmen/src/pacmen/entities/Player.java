@@ -32,7 +32,8 @@ public class Player extends Entity implements Collision {
          * player num 3: x = 360
          * (basically different spawn points)
          */
-        super(num == 1 ? col * 20 : 370, row * 20, speed);
+        super((col * 20) + 10, (row * 20) + 10, speed);
+    
         this.num = num;
         this.score = 0;
         this.state = "ACTIVE";
@@ -201,10 +202,20 @@ public class Player extends Entity implements Collision {
         this.score += 5;
     }
 
+    @Override
+    public void collideGhost() {
+        if (!this.state.equals("POWER_UP")) {
+            this.state = "DEAD";
+        }
+    }
+
     public void collideGhost(Ghost ghost) {
         if (this.state.equals("POWER_UP")) {
-            this.score += (int) (Math.pow(200, combo));    // stated requirement
-            this.combo++;
+            if (ghost.currentState != Ghost.GhostState.EATEN) {
+                already_eaten = true;
+                this.score += 200 * (int) (Math.pow(2, this.combo));    // stated requirement
+                this.combo++;
+            }
         } else {
             this.state = "DEAD";
         }

@@ -6,7 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import pacmen.scene.GameSceneController;
+import pacmen.scene.*;
 
 import java.io.File;
 
@@ -22,6 +22,7 @@ public class SceneManager {
     public static final String GAME        = "resources/fxml/Gamescene.fxml";
     public static final String GAME_OVER   = "resources/fxml/Gameoverscene.fxml";
     public static final String MULTIPLAYER = "resources/fxml/Multiplayerscene.fxml";
+    public static final String LEADERBOARD = "resources/fxml/Leaderboard.fxml";
 
     private static Stage        primaryStage;
     private static final int    W = 900;
@@ -99,6 +100,8 @@ public class SceneManager {
             Object controller = loader.getController();
             if (controller instanceof GameSceneController) {
                 ((GameSceneController) controller).initAndStartGame();
+            } else if (controller instanceof MultiplayerSceneController) {
+                ((MultiplayerSceneController) controller).initAndStartGame();
             }
 
             Scene scene = new Scene(root, W, H);

@@ -1,298 +1,362 @@
 package pacmen.scene;
 
-import javafx.animation.AnimationTimer;
+import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+// import javafx.scene.image.Image;
+// import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
+import javafx.util.Duration;
 import pacmen.entities.Ghost;
 import pacmen.entities.Player;
-import pacmen.map.*;
+import pacmen.map.Cell;
+import pacmen.map.CherryCell;
+import pacmen.map.GameMap;
+import pacmen.map.MapLoader;
+import pacmen.map.PelletCell;
+import pacmen.map.WallCell;
+import pacmen.userinterface.TimerDisplay;
 import pacmen.util.SceneManager;
 
-import java.io.File;
-import java.net.InetAddress;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-/**
- * Controls the Multiplayer lobby screen.
- *
- * Host tab  – shows your local IP and a live lobby list.
- *             START GAME enables once ≥ 2 players are present.
- * Join tab  – enter host IP, click CONNECT, then READY when lobby shows.
- *
- * Wire up to your MultiplayerManager:
- *   MultiplayerManager.getInstance().setLobbyListener(this::onLobbyUpdate);
- */
 public class MultiplayerSceneController implements Initializable {
+    // ── FXML injections ───────────────────────────────────────────
+    @FXML private StackPane rootPane;
+    @FXML private Canvas    gameCanvas;      // kept in FXML but hidden behind gamePane
+    @FXML private StackPane canvasWrapper;   // sprites go in here
+    @FXML private StackPane pauseOverlay;
+    @FXML private StackPane countdownOverlay;
+    @FXML private Label     countdownLabel;
+    @FXML private Label     scoreLabel;
+    @FXML private Label     highScoreLabel;
+    @FXML private Label     levelLabel;
+    @FXML private Label     timerLabel;
+    @FXML private HBox      livesBox;
 
-    // ── FXML – tabs ───────────────────────────────────────────────
-    @FXML private Button tabHost;
-    @FXML private Button tabJoin;
+    private long elapsedTimerMillis = 0;
+    private long lastTimerUpdateNanos = 0;
 
-    // ── FXML – host panel ─────────────────────────────────────────
-    @FXML private VBox   hostPanel;
-    @FXML private Label  ipLabel;
-    @FXML private Label  portLabel;
-    @FXML private VBox   lobbyList;
-    @FXML private Label  playerCountLabel;
-    @FXML private Button btnStartGame;
+    // ── Game state ────────────────────────────────────────────────
+    private String     state           = "ACTIVE"; // ACTIVE, PAUSED, WIN, LOSE     
+    private GameMap    gameMap         = null;
+    private int        currentScore    = 0;
+    private int        currentLives    = 1;
+    private int        currentLevel    = 2;
+    private static int storedHighScore = 0;
 
-    // ── FXML – join panel ─────────────────────────────────────────
-    @FXML private VBox      joinPanel;
-    @FXML private TextField ipField;
-    @FXML private TextField portField;
-    @FXML private Label     connectionStatus;
-    @FXML private VBox      joinLobbyList;
-    @FXML private Button    btnReady;
-
+    // ── Input ─────────────────────────────────────────────────────
     private final Set<KeyCode> keysPressed = new HashSet<>();
 
+    // ── Game objects (filled in initAndStartGame) ─────────────────
+    private AnimationTimer gameLoop;
+    private Pane           gamePane;
+
+    // ─────────────────────────────────────────────────────────────
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        detectLocalIp();
-        showTab(true); // default to Host tab
-    }
+        buildLivesDisplay(currentLives);
+        updateHUD(0, storedHighScore, 2);
 
-    // ── Tab switching ─────────────────────────────────────────────
-    @FXML private void onTabHost() { showTab(true); }
-    @FXML private void onTabJoin() { showTab(false); }
+        rootPane.setFocusTraversable(true);
+        rootPane.setOnKeyPressed(e -> keysPressed.add(e.getCode()));
+        rootPane.setOnKeyReleased(e -> keysPressed.remove(e.getCode()));
 
-    private void showTab(boolean host) {
-        hostPanel.setVisible(host);  hostPanel.setManaged(host);
-        joinPanel.setVisible(!host); joinPanel.setManaged(!host);
-
-        String active   = "-fx-font-family:'Press Start 2P',monospace;-fx-font-size:10px;" +
-                          "-fx-background-color:#FFD700;-fx-text-fill:#050810;" +
-                          "-fx-background-radius:0;-fx-border-radius:0;-fx-cursor:hand;";
-        String inactive = "-fx-font-family:'Press Start 2P',monospace;-fx-font-size:10px;" +
-                          "-fx-background-color:transparent;-fx-text-fill:rgba(255,215,0,0.55);" +
-                          "-fx-background-radius:0;-fx-border-radius:0;-fx-cursor:hand;" +
-                          "-fx-border-color:rgba(255,215,0,0.25);-fx-border-width:0 0 2 0;";
-
-        tabHost.setStyle(host  ? active : inactive);
-        tabJoin.setStyle(!host ? active : inactive);
-    }
-
-    // ── Host: detect local IP ─────────────────────────────────────
-    private void detectLocalIp() {
-        new Thread(() -> {
-            try {
-                String ip = InetAddress.getLocalHost().getHostAddress();
-                Platform.runLater(() -> ipLabel.setText(ip));
-            } catch (Exception e) {
-                Platform.runLater(() -> ipLabel.setText("127.0.0.1"));
+        // Wire keyboard input as soon as this scene is attached to a window
+        rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                newScene.setOnKeyPressed(rootPane.getOnKeyPressed());
+                newScene.setOnKeyReleased(rootPane.getOnKeyReleased());
+                Platform.runLater(rootPane::requestFocus);
             }
-        }).start();
+        });
     }
 
-    // ── Host: copy IP to clipboard ────────────────────────────────
-    @FXML private void onCopyIp() {
-        String ip = ipLabel.getText();
-        javafx.scene.input.Clipboard cb = javafx.scene.input.Clipboard.getSystemClipboard();
-        javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
-        content.putString(ip);
-        cb.setContent(content);
-        // Brief visual feedback
-        ipLabel.setStyle("-fx-text-fill:#00FF88;-fx-font-family:'Press Start 2P',monospace;-fx-font-size:14px;");
-        javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(1));
-        pause.setOnFinished(e -> ipLabel.setStyle(
-            "-fx-font-family:'Press Start 2P',monospace;-fx-font-size:14px;-fx-text-fill:#FFD700;"));
-        pause.play();
-    }
+    // ─────────────────────────────────────────────────────────────
+    // MAIN ENTRY POINT
+    // Called by SceneManager after loading this scene.
+    // Contains everything that used to live in Main.start().
+    // ─────────────────────────────────────────────────────────────
+    public void initAndStartGame() {
 
-    // ── Host: start game (when enough players ready) ──────────────
-    @FXML private void onStartGame() {
-        // TODO: signal MultiplayerManager to begin game
-        launchDraftMultiplayerGame();
-    }
+        // 1. Build the sprite pane and attach it to the FXML wrapper
+        gamePane = new Pane();
+        gamePane.setStyle("-fx-background-color: black;");
+        canvasWrapper.getChildren().add(gamePane);
+        Platform.runLater(rootPane::requestFocus);
 
-    private void launchDraftMultiplayerGame() {
+        // 2. Map
         GameMap gameMap = new GameMap();
-        MapLoader.loadMap(gameMap, "resources\\maps\\level1.txt");
+        this.gameMap = gameMap;
+        MapLoader.loadMap(gameMap, "resources/maps/level1.txt");
         MapLoader.connectWallCells(gameMap);
 
-        final Player p1;
-        final Player p2;
+        // 3. Players
+        final Player[] players = new Player[2];
         try {
-            p1 = new Player(gameMap, 1.5, 1, 9, 17);
-            p2 = new Player(gameMap, 1.5, 2, 18, 17);
+            players[0] = new Player(gameMap, 1.5, 1, 8, 14);
+            players[1] = new Player(gameMap, 1.5, 2, 20, 14);
         } catch (Exception e) {
             e.printStackTrace();
-            return;
         }
+        if (players[0] != null) players[0].setInput(keysPressed);
+        if (players[1] != null) players[1].setInput(keysPressed);
+        
+        final Player p1 = players[0];
+        final Player p2 = players[1];
 
-        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA, p1, "blinky");
+        // 4. Ghosts
+        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.RED, p1, "blinky");
         Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE, p1, "clyde");
         Ghost g3 = new Ghost(gameMap, 290, 280, 1.5, Color.PINK, p1, "pinky");
+        Ghost g4 = new Ghost(gameMap, 230, 280, 1.5, Color.AQUA, p2, "inky");
 
-        p1.setInput(keysPressed);
-        p2.setInput(keysPressed);
-
-        Pane root = new Pane();
-        root.setStyle("-fx-background-color: black;");
-
-        Label scoreLabelP1 = new Label("Score: " + p1.score);
-        Label scoreLabelP2 = new Label("Score: " + p2.score);
-        scoreLabelP1.setFont(Font.font("Arial", FontWeight.BOLD, 24));
-        scoreLabelP2.setFont(Font.font("Arial", FontWeight.BOLD, 24));
-        scoreLabelP1.setTextFill(Color.WHITE);
-        scoreLabelP2.setTextFill(Color.WHITE);
-        scoreLabelP1.setLayoutX(50.0);
-        scoreLabelP1.setLayoutY(630.0);
-        scoreLabelP2.setLayoutX(410.0);
-        scoreLabelP2.setLayoutY(630.0);
-
+        // 5. Map cells (pellets, walls)
         for (int x = 0; x < 28; x++) {
             for (int y = 0; y < 36; y++) {
                 Cell cell = gameMap.getCell(x, y);
-                if (cell instanceof PelletCell) {
-                    root.getChildren().add(((PelletCell) cell).getPellet().sprite);
-                }
-                if (cell instanceof CherryCell) {
-                    root.getChildren().add(((CherryCell) cell).getCherry().sprite);
-                }
-                if (cell instanceof WallCell) {
-                    root.getChildren().add(((WallCell) cell).getSprite());
-                }
+                if (cell instanceof PelletCell)
+                    gamePane.getChildren().add(((PelletCell) cell).getPellet().sprite);
+                if (cell instanceof CherryCell)
+                    gamePane.getChildren().add(((CherryCell) cell).getCherry().sprite);
+                if (cell instanceof WallCell)
+                    gamePane.getChildren().add(((WallCell) cell).getSprite());
             }
         }
 
-        File imageFile = new File("resources/assets/MAP_Level1.png");
-        Image image = new Image(imageFile.toURI().toString());
-        ImageView imageView = new ImageView(image);
-        imageView.setFitWidth(560);
-        imageView.setPreserveRatio(true);
+        // 6. Map border image
+        // File imageFile = new File("resources/assets/MAP_Level1.png");
+        // Image image = new Image(imageFile.toURI().toString());
+        // ImageView imageView = new ImageView(image);
+        // imageView.setFitWidth(560);
+        // imageView.setPreserveRatio(true);
 
-        root.getChildren().addAll(p1.sprite, p2.sprite);
-        root.getChildren().addAll(scoreLabelP1, scoreLabelP2);
-        root.getChildren().add(imageView);
-        root.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite);
+        // 7. Add everything to the pane (same order as original Main.java)
+        gamePane.getChildren().addAll(p1.sprite, p2.sprite);
+        //gamePane.getChildren().add(imageView);
+        gamePane.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite, g4.sprite);
 
-        Scene scene = new Scene(root, 28 * 20, 36 * 20);
-        scene.setOnKeyPressed(e -> keysPressed.add(e.getCode()));
-        scene.setOnKeyReleased(e -> keysPressed.remove(e.getCode()));
+        // 8. Countdown → then start the game loop
+        startCountdown(() -> {
+            elapsedTimerMillis = 0;
+            lastTimerUpdateNanos = System.nanoTime();
+            updateTimerDisplay();
 
-        AnimationTimer gameLoop = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                p1.update();
-                p2.update();
-                g1.update();
-                g2.update();
-                g3.update();
-                scoreLabelP1.setText("Score: " + p1.score);
-                scoreLabelP2.setText("Score: " + p2.score);
+            gameLoop = new AnimationTimer() {
+                @Override
+                public void handle(long now) {
+                        long deltaMillis = (now - lastTimerUpdateNanos) / 1_000_000;
+                        if (deltaMillis > 0) {
+                            lastTimerUpdateNanos = now;
 
-                if (p1.state.equals("DEAD") || p2.state.equals("DEAD")) {
-                    // TODO: call score manager for actions
-                }
-            }
-        };
-        gameLoop.start();
+                            if (state.equals("ACTIVE")) {
+                                elapsedTimerMillis += deltaMillis;
+                                updateTimerDisplay();
 
-        if (SceneManager.getStage() != null) {
-            SceneManager.getStage().setTitle("Pac-Men Multiplayer");
-            SceneManager.getStage().setScene(scene);
-            SceneManager.getStage().show();
-        }
-    }
+                                p1.update();
+                                p2.update();
+                                g1.update();
+                                g2.update();
+                                g3.update();
 
-    // ── Join: connect to host ─────────────────────────────────────
-    @FXML private void onConnect() {
-        String ip   = ipField.getText().trim();
-        String port = portField.getText().trim();
+                                if (p1.currentCol == g1.getGridX() && p1.currentRow == g1.getGridY()) {
+                                    p1.collideGhost(g1);
+                                }
+                                if (p1.currentCol == g2.getGridX() && p1.currentRow == g2.getGridY()) {
+                                    p1.collideGhost(g2);
+                                }
+                                if (p1.currentCol == g3.getGridX() && p1.currentRow == g3.getGridY()) {
+                                    p1.collideGhost(g3);
+                                }
+                                if (p1.currentCol == g4.getGridX() && p1.currentRow == g4.getGridY()) {
+                                    p1.collideGhost(g4);
+                                }
+                                if (p2.currentCol == g1.getGridX() && p2.currentRow == g1.getGridY()) {
+                                    p2.collideGhost(g1);
+                                }
+                                if (p2.currentCol == g2.getGridX() && p2.currentRow == g2.getGridY()) {
+                                    p2.collideGhost(g2);
+                                }
+                                if (p2.currentCol == g3.getGridX() && p2.currentRow == g3.getGridY()) {
+                                    p2.collideGhost(g3);
+                                }
+                                if (p2.currentCol == g4.getGridX() && p2.currentRow == g4.getGridY()) {
+                                    p2.collideGhost(g4);
+                                }
 
-        if (ip.isEmpty()) {
-            connectionStatus.setText("⚠ ENTER A HOST IP");
-            connectionStatus.setStyle("-fx-text-fill:#FF3B3B;-fx-font-family:'Press Start 2P',monospace;-fx-font-size:8px;");
-            return;
-        }
+                                // Sync HUD score
+                                updateHUD(p1.score, storedHighScore, currentLevel);
 
-        connectionStatus.setText("CONNECTING...");
-        connectionStatus.setStyle("-fx-text-fill:#FFD700;-fx-font-family:'Press Start 2P',monospace;-fx-font-size:8px;");
+                                // Sync lives display (only redraws when value changes)
+                                setLives(currentLives);
 
-        // TODO: Replace this stub with MultiplayerManager.connect(ip, port, callback)
-        javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(1));
-        pause.setOnFinished(e -> {
-            connectionStatus.setText("✓ CONNECTED TO " + ip + ":" + port);
-            connectionStatus.setStyle("-fx-text-fill:#00FF88;-fx-font-family:'Press Start 2P',monospace;-fx-font-size:8px;");
-            btnReady.setDisable(false);
-            addPlayerRow(joinLobbyList, "YOU", true);
-            addPlayerRow(joinLobbyList, ip.substring(ip.lastIndexOf('.') + 1).equals("1") ? "HOST" : "HOST", false);
+                                // Win/lose check
+                                if (p1.state.equals("DEAD") && !state.equals("LOSE")) {
+                                    state = "LOSE";
+                                    stop();
+                                    handleLose(p1);
+                                    return;
+                                }
+
+                                if (allPelletsConsumed()) {
+                                    if (!state.equals("WIN")) {
+                                        state = "WIN";
+                                        stop();
+                                        handleWin();
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+            };
+            gameLoop.start();
         });
-        pause.play();
     }
 
-    // ── Join: signal ready ────────────────────────────────────────
-    @FXML private void onReady() {
-        btnReady.setDisable(true);
-        btnReady.setText("✓  WAITING...");
-        // TODO: MultiplayerManager.sendReady();
+    // ── HUD ───────────────────────────────────────────────────────
+
+    /** Syncs score, high score, and level labels. Called every game tick. */
+    public void updateHUD(int score, int highScore, int level) {
+        currentScore = score;
+        currentLevel = level;
+        if (score > storedHighScore) storedHighScore = score;
+        scoreLabel.setText(String.format("%06d", score));
+        highScoreLabel.setText(String.format("%06d", Math.max(highScore, storedHighScore)));
+        levelLabel.setText(String.valueOf(level));
     }
 
-    // ── Lobby helpers ─────────────────────────────────────────────
-
-    /**
-     * Add a player row to a lobby VBox.
-     * Call this from a MultiplayerManager lobby-update listener.
-     *
-     * @param list   the lobbyList or joinLobbyList VBox
-     * @param name   player username
-     * @param ready  whether this player is ready
-     */
-    public void addPlayerRow(VBox list, String name, boolean ready) {
-        HBox row = new HBox();
-        row.getStyleClass().add("player-row");
-        row.setSpacing(0);
-        row.setPrefHeight(44);
-
-        Label nameLabel = new Label(name);
-        nameLabel.getStyleClass().add("player-row-name");
-        nameLabel.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(nameLabel, javafx.scene.layout.Priority.ALWAYS);
-
-        Label statusDot = new Label(ready ? "●" : "○");
-        statusDot.getStyleClass().add(ready ? "status-dot-ready" : "status-dot-waiting");
-
-        Label statusText = new Label(ready ? " READY" : " WAITING");
-        statusText.getStyleClass().add("player-row-status");
-
-        row.getChildren().addAll(nameLabel, statusDot, statusText);
-        list.getChildren().add(row);
-
-        // Update player count
-        int count = list.getChildren().size();
-        playerCountLabel.setText(count + " / 4 PLAYERS");
-        btnStartGame.setDisable(count < 2);
-    }
-
-    /** Clear and repopulate the host lobby. */
-    public void refreshLobby(java.util.List<pacmen.entities.Player> players) {
-        lobbyList.getChildren().clear();
-        for (pacmen.entities.Player p : players) {
-            addPlayerRow(lobbyList, p.toString(), false);
+    /** Refreshes the ● life icons. Only redraws when the count actually changes. */
+    public void setLives(int lives) {
+        if (lives != currentLives) {
+            currentLives = lives;
+            buildLivesDisplay(lives);
         }
+    }
+
+    private void buildLivesDisplay(int lives) {
+        livesBox.getChildren().clear();
+        for (int i = 0; i < lives; i++) {
+            Label dot = new Label("●");
+            dot.setStyle("-fx-font-size:20px; -fx-text-fill:#FFD700;" +
+                         "-fx-effect:dropshadow(gaussian,rgba(255,215,0,0.6),6,0.4,0,0);");
+            livesBox.getChildren().add(dot);
+        }
+    }
+
+    // ── Countdown ─────────────────────────────────────────────────
+
+    /** Shows 3 → 2 → 1 → GO!, then calls onGo. */
+    public void startCountdown(Runnable onGo) {
+        countdownOverlay.setVisible(true);
+        countdownOverlay.setManaged(true);
+        String[] steps = {"3", "2", "1", "GO!"};
+
+        Timeline tl = new Timeline();
+        for (int i = 0; i < steps.length; i++) {
+            final String text = steps[i];
+            tl.getKeyFrames().add(new KeyFrame(Duration.seconds(i), e -> {
+                countdownLabel.setText(text);
+                ScaleTransition pop = new ScaleTransition(Duration.millis(300), countdownLabel);
+                pop.setFromX(1.5); pop.setFromY(1.5);
+                pop.setToX(1.0);   pop.setToY(1.0);
+                pop.play();
+            }));
+        }
+        tl.getKeyFrames().add(new KeyFrame(Duration.seconds(steps.length), e -> {
+            FadeTransition fade = new FadeTransition(Duration.millis(300), countdownOverlay);
+            fade.setToValue(0);
+            fade.setOnFinished(ev -> {
+                countdownOverlay.setVisible(false);
+                countdownOverlay.setManaged(false);
+                if (onGo != null) onGo.run();
+            });
+            fade.play();
+        }));
+        tl.play();
+    }
+
+    // ── Game over ─────────────────────────────────────────────────
+
+    /** Stops the loop and navigates to the Game Over screen. */
+    public void triggerGameOver() {
+        if (gameLoop != null) gameLoop.stop();
+        SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel);
+    }
+
+    // ── Pause ─────────────────────────────────────────────────────
+    @FXML private void onPause() {
+        // Enter PAUSED state; stop game rules
+        state = "PAUSED";
+        pauseOverlay.setVisible(true);
+        pauseOverlay.setManaged(true);
+        if (gameLoop != null) gameLoop.stop();
+    }
+
+    private void updateTimerDisplay() {
+        timerLabel.setText(TimerDisplay.formatElapsedTime(elapsedTimerMillis));
+    }
+
+    @FXML private void onResume() {
+        // Resume the game from PAUSED
+        state = "ACTIVE";
+        pauseOverlay.setVisible(false);
+        pauseOverlay.setManaged(false);
+        if (gameLoop != null) {
+            lastTimerUpdateNanos = System.nanoTime();
+            gameLoop.start();
+        }
+    }
+
+    // Check whether any pellets remain on the map
+    private boolean allPelletsConsumed() {
+        if (this.gameMap == null) return false;
+        for (int x = 0; x < this.gameMap.getCols(); x++) {
+            for (int y = 0; y < this.gameMap.getRows(); y++) {
+                Cell cell = this.gameMap.getCell(x, y);
+                if (cell instanceof PelletCell) {
+                    if (((PelletCell) cell).getPellet().state.equals("ACTIVE")) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private void handleLose(Player p) {
+        // Game rules already stopped; play death animation after short delay,
+        // then navigate to Game Over screen.
+        PauseTransition beforeDie = new PauseTransition(Duration.millis(300));
+        beforeDie.setOnFinished(e -> p.die());
+
+        PauseTransition toStats = new PauseTransition(Duration.millis(1200));
+        toStats.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel));
+
+        SequentialTransition seq = new SequentialTransition(beforeDie, toStats);
+        seq.play();
+    }
+
+    private void handleWin() {
+        // Brief win delay/sound then show statistics
+        PauseTransition winDelay = new PauseTransition(Duration.millis(800));
+        winDelay.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel));
+        winDelay.play();
     }
 
     // ── Navigation ────────────────────────────────────────────────
-    @FXML private void onBack() {
-        // TODO: MultiplayerManager.disconnect();
+    @FXML private void onMainMenu() {
+        if (gameLoop != null) gameLoop.stop();
         SceneManager.goTo(SceneManager.MENU);
     }
 }

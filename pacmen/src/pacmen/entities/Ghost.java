@@ -10,7 +10,7 @@ public class Ghost extends Entity {
     public enum GhostState { SCATTER, CHASE, FRIGHTENED, EATEN }
     
     private final double baseSpeed;     // default speed, set later
-    private GhostState currentState;
+    public  GhostState currentState;    // Public for player accessibility
     private Color baseColor;
     private int targetX, targetY;
     private final GameMap map;
@@ -119,9 +119,9 @@ public class Ghost extends Entity {
         this.sprite.setCenterX(x);
         this.sprite.setCenterY(y);
 
-        if (currentState == GhostState.FRIGHTENED) {
+        if (this.currentState == GhostState.FRIGHTENED) {
             this.sprite.setFill(Color.BLUE);
-        } else if (currentState == GhostState.EATEN) {
+        } else if (this.currentState == GhostState.EATEN) {
             this.sprite.setRadius(5);
         } else {
             this.sprite.setFill(baseColor);
@@ -158,6 +158,13 @@ public class Ghost extends Entity {
         this.currentState = state;
     }
 
+    public void collidePlayer(Player player) {
+        if (player.state.equals("POWER_UP") && this.currentState != GhostState.EATEN) {
+            setCurrentState(GhostState.EATEN);
+        }
+        else return;
+    }
+ 
     @Override
     public void render() {}
 }

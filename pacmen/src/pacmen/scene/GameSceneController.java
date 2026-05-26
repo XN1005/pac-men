@@ -103,12 +103,11 @@ public class GameSceneController implements Initializable {
             e.printStackTrace();
         }
         if (players[0] != null) players[0].setInput(keysPressed);
-        if (players[1] != null) players[1].setInput(keysPressed);
         
         final Player p1 = players[0];
-        // final Player p2 = players[1];
 
         // 4. Ghosts
+        // Limited to 3 ghosts
         Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA, p1, "blinky");
         Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE, p1, "clyde");
         Ghost g3 = new Ghost(gameMap, 290, 280, 1.5, Color.PINK, p1, "pinky");
@@ -150,25 +149,34 @@ public class GameSceneController implements Initializable {
                         long deltaMillis = (now - lastTimerUpdateNanos) / 1_000_000;
                         if (deltaMillis > 0) {
                             lastTimerUpdateNanos = now;
-
+                            
+                            // GAME ACTIVE UPDATE
                             if (state.equals("ACTIVE")) {
                                 elapsedTimerMillis += deltaMillis;
                                 updateTimerDisplay();
 
                                 p1.update();
-                                // p2.update();
                                 g1.update();
                                 g2.update();
                                 g3.update();
+                                
+                                if (p1.state.equals("POWER_UP")) {
 
-                                if (p1.currentCol == g1.getGridX() && p1.currentRow == g1.getGridY()) {
+                                }
+
+                                // Calculate euclidean distance from player to ghost. <= 1 then collision occurs
+                                
+                                if (Math.pow(Math.pow(p1.currentCol - g1.getGridX(), 2) + Math.pow(p1.currentRow - g1.getGridY(), 2), 0.5) <= 1) {
                                     p1.collideGhost(g1);
+                                    g1.collidePlayer(p1);
                                 }
-                                if (p1.currentCol == g2.getGridX() && p1.currentRow == g2.getGridY()) {
+                                if (Math.pow(Math.pow(p1.currentCol - g2.getGridX(), 2) + Math.pow(p1.currentRow - g2.getGridY(), 2), 0.5) <= 1) {
                                     p1.collideGhost(g2);
+                                    g2.collidePlayer(p1);
                                 }
-                                if (p1.currentCol == g3.getGridX() && p1.currentRow == g3.getGridY()) {
+                                if (Math.pow(Math.pow(p1.currentCol - g3.getGridX(), 2) + Math.pow(p1.currentRow - g3.getGridY(), 2), 0.5) <= 1) {
                                     p1.collideGhost(g3);
+                                    g3.collidePlayer(p1);
                                 }
 
                                 // Sync HUD score

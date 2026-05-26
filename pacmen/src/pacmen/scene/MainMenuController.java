@@ -127,7 +127,7 @@ public class MainMenuController implements Initializable {
     // ── Navigation handlers ───────────────────────────────────────
     @FXML private void onPlay()        { SceneManager.goTo(SceneManager.GAME); }
     @FXML private void onHostGame()    { SceneManager.goTo(SceneManager.MULTIPLAYER); }
-    @FXML private void onLeaderboard() { System.out.println("[MENU] Leaderboard – TODO"); }
+    @FXML private void onLeaderboard() { SceneManager.goTo(SceneManager.LEADERBOARD); }
 
     @FXML private void onQuit() {
         FadeTransition fade = new FadeTransition(Duration.millis(400), rootPane);
