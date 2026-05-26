@@ -5,6 +5,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -12,6 +13,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 import pacmen.util.SceneManager;
+import pacmen.datamanager.ScoreManager;
 
 import java.net.URL;
 import java.util.List;
@@ -31,6 +33,10 @@ public class MainMenuController implements Initializable {
     @FXML private HBox      dotRowBottom;
     @FXML private VBox      menuButtons;
     @FXML private Label     ghostBlinky, ghostPinky, ghostInky, ghostClyde;
+    
+    // Injected input components for custom player identification strings
+    @FXML private TextField player1Input;
+    @FXML private TextField player2Input;
 
     private static final String[] GHOST_COLORS = {
         "-fx-text-fill:rgba(255, 59, 59, 0.9);",
@@ -124,9 +130,26 @@ public class MainMenuController implements Initializable {
         st.play();
     }
 
+    // ── Helper to process and cache active registration titles ───
+    private void savePlayerNames() {
+        String p1 = (player1Input != null && !player1Input.getText().isBlank()) ? player1Input.getText() : "Player1";
+        String p2 = (player2Input != null && !player2Input.getText().isBlank()) ? player2Input.getText() : "Player2";
+        ScoreManager.getInstance().setPlayerNames(p1, p2);
+    }
+
     // ── Navigation handlers ───────────────────────────────────────
-    @FXML private void onPlay()        { SceneManager.goTo(SceneManager.GAME); }
-    @FXML private void onHostGame()    { SceneManager.goTo(SceneManager.MULTIPLAYER); }
+    @FXML 
+    private void onPlay() { 
+        savePlayerNames();
+        SceneManager.goTo(SceneManager.GAME); 
+    }
+    
+    @FXML 
+    private void onHostGame() { 
+        savePlayerNames();
+        SceneManager.goTo(SceneManager.MULTIPLAYER); 
+    }
+    
     @FXML private void onLeaderboard() { SceneManager.goTo(SceneManager.LEADERBOARD); }
 
     @FXML private void onQuit() {

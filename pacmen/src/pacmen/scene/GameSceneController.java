@@ -1,12 +1,11 @@
 package pacmen.scene;
 
 import javafx.animation.*;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Label;
-// import javafx.scene.image.Image;
-// import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -23,18 +22,19 @@ import pacmen.map.PelletCell;
 import pacmen.map.WallCell;
 import pacmen.userinterface.TimerDisplay;
 import pacmen.util.SceneManager;
+import pacmen.datamanager.ScoreManager;
 
-import java.io.File;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.ResourceBundle;
 import java.util.Set;
 
 public class GameSceneController implements Initializable {
+    
     // ── FXML injections ───────────────────────────────────────────
     @FXML private StackPane rootPane;
-    @FXML private Canvas    gameCanvas;      // kept in FXML but hidden behind gamePane
-    @FXML private StackPane canvasWrapper;   // sprites go in here
+    @FXML private Canvas    gameCanvas;      // Kept in FXML but hidden behind gamePane 
+    @FXML private StackPane canvasWrapper;   // Sprites go in here 
     @FXML private StackPane pauseOverlay;
     @FXML private StackPane countdownOverlay;
     @FXML private Label     countdownLabel;
@@ -43,6 +43,7 @@ public class GameSceneController implements Initializable {
     @FXML private Label     levelLabel;
     @FXML private Label     timerLabel;
     @FXML private HBox      livesBox;
+    @FXML private Label     p1NameLabel;     // Added to dynamically track and display player names
 
     private long elapsedTimerMillis = 0;
     private long lastTimerUpdateNanos = 0;
@@ -54,6 +55,7 @@ public class GameSceneController implements Initializable {
     private int        currentLives    = 1;
     private int        currentLevel    = 2;
     private static int storedHighScore = 0;
+    private String     activePlayer1Name = "Player1"; // Cache current player identity
 
     // ── Input ─────────────────────────────────────────────────────
     private final Set<KeyCode> keysPressed = new HashSet<>();
@@ -65,10 +67,13 @@ public class GameSceneController implements Initializable {
     // ─────────────────────────────────────────────────────────────
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Pull down absolute top score from the global ledger on initiation
+        storedHighScore = ScoreManager.getInstance().getAbsoluteHighScore();
+        
         buildLivesDisplay(currentLives);
         updateHUD(0, storedHighScore, 2);
 
-        // Wire keyboard input as soon as this scene is attached to a window
+        // Wire keyboard input as soon as this scene is attached to a window 
         rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
                 newScene.setOnKeyPressed(e  -> keysPressed.add(e.getCode()));
@@ -77,28 +82,30 @@ public class GameSceneController implements Initializable {
         });
     }
 
-    // ─────────────────────────────────────────────────────────────
     // MAIN ENTRY POINT
-    // Called by SceneManager after loading this scene.
-    // Contains everything that used to live in Main.start().
-    // ─────────────────────────────────────────────────────────────
     public void initAndStartGame() {
-
-        // 1. Build the sprite pane and attach it to the FXML wrapper
+        // 1. Build the sprite pane and attach it to the FXML wrapper 
         gamePane = new Pane();
         gamePane.setStyle("-fx-background-color: black;");
         canvasWrapper.getChildren().add(gamePane);
 
-        // 2. Map
+        // Fetch dynamic context values out of the backend configuration step
+        activePlayer1Name = ScoreManager.getInstance().getPlayer1Name();
+        if (p1NameLabel != null) {
+            p1NameLabel.setText(activePlayer1Name.toUpperCase());
+        }
+
+        // 2. Map 
         GameMap gameMap = new GameMap();
         this.gameMap = gameMap;
         MapLoader.loadMap(gameMap, "resources/maps/level2.txt");
         MapLoader.connectWallCells(gameMap);
 
-        // 3. Players
+        // 3. Players 
         final Player[] players = new Player[2];
         try {
-            players[0] = new Player(gameMap, 1.5, 1, 20, 14);
+            // Updated initialization signature parameters to forward explicit name mapping values
+            players[0] = new Player(gameMap, 1.5, 1, 20, 14, activePlayer1Name);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -106,13 +113,12 @@ public class GameSceneController implements Initializable {
         
         final Player p1 = players[0];
 
-        // 4. Ghosts
-        // Limited to 3 ghosts
+        // 4. Ghosts 
         Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA, p1, "blinky");
         Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE, p1, "clyde");
         Ghost g3 = new Ghost(gameMap, 290, 280, 1.5, Color.PINK, p1, "pinky");
 
-        // 5. Map cells (pellets, walls)
+        // 5. Map cells (pellets, walls) 
         for (int x = 0; x < 28; x++) {
             for (int y = 0; y < 36; y++) {
                 Cell cell = gameMap.getCell(x, y);
@@ -125,19 +131,11 @@ public class GameSceneController implements Initializable {
             }
         }
 
-        // 6. Map border image
-        // File imageFile = new File("resources/assets/MAP_Level1.png");
-        // Image image = new Image(imageFile.toURI().toString());
-        // ImageView imageView = new ImageView(image);
-        // imageView.setFitWidth(560);
-        // imageView.setPreserveRatio(true);
-
-        // 7. Add everything to the pane (same order as original Main.java)
+        // 7. Add everything to the pane 
         gamePane.getChildren().addAll(p1.sprite);
-        //gamePane.getChildren().add(imageView);
         gamePane.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite);
 
-        // 8. Countdown → then start the game loop
+        // 8. Countdown → then start the game loop 
         startCountdown(() -> {
             elapsedTimerMillis = 0;
             lastTimerUpdateNanos = System.nanoTime();
@@ -146,64 +144,59 @@ public class GameSceneController implements Initializable {
             gameLoop = new AnimationTimer() {
                 @Override
                 public void handle(long now) {
-                        long deltaMillis = (now - lastTimerUpdateNanos) / 1_000_000;
-                        if (deltaMillis > 0) {
-                            lastTimerUpdateNanos = now;
-                            
-                            // GAME ACTIVE UPDATE
-                            if (state.equals("ACTIVE")) {
-                                elapsedTimerMillis += deltaMillis;
-                                updateTimerDisplay();
+                    long deltaMillis = (now - lastTimerUpdateNanos) / 1_000_000;
+                    if (deltaMillis > 0) {
+                        lastTimerUpdateNanos = now;
+                        
+                        // GAME ACTIVE UPDATE 
+                        if (state.equals("ACTIVE")) {
+                            elapsedTimerMillis += deltaMillis;
+                            updateTimerDisplay();
 
-                                p1.update();
-                                g1.update();
-                                g2.update();
-                                g3.update();
-                                
-                                if (p1.state.equals("POWER_UP")) {
+                            p1.update();
+                            g1.update();
+                            g2.update();
+                            g3.update();
 
-                                }
+                            // Calculate euclidean distance from player to ghost. <= 1 then collision occurs 
+                            if (Math.pow(Math.pow(p1.currentCol - g1.getGridX(), 2) + Math.pow(p1.currentRow - g1.getGridY(), 2), 0.5) <= 1) {
+                                p1.collideGhost(g1);
+                                g1.collidePlayer(p1);
+                            }
+                            if (Math.pow(Math.pow(p1.currentCol - g2.getGridX(), 2) + Math.pow(p1.currentRow - g2.getGridY(), 2), 0.5) <= 1) {
+                                p1.collideGhost(g2);
+                                g2.collidePlayer(p1);
+                            }
+                            if (Math.pow(Math.pow(p1.currentCol - g3.getGridX(), 2) + Math.pow(p1.currentRow - g3.getGridY(), 2), 0.5) <= 1) {
+                                p1.collideGhost(g3);
+                                g3.collidePlayer(p1);
+                            }
 
-                                // Calculate euclidean distance from player to ghost. <= 1 then collision occurs
-                                
-                                if (Math.pow(Math.pow(p1.currentCol - g1.getGridX(), 2) + Math.pow(p1.currentRow - g1.getGridY(), 2), 0.5) <= 1) {
-                                    p1.collideGhost(g1);
-                                    g1.collidePlayer(p1);
-                                }
-                                if (Math.pow(Math.pow(p1.currentCol - g2.getGridX(), 2) + Math.pow(p1.currentRow - g2.getGridY(), 2), 0.5) <= 1) {
-                                    p1.collideGhost(g2);
-                                    g2.collidePlayer(p1);
-                                }
-                                if (Math.pow(Math.pow(p1.currentCol - g3.getGridX(), 2) + Math.pow(p1.currentRow - g3.getGridY(), 2), 0.5) <= 1) {
-                                    p1.collideGhost(g3);
-                                    g3.collidePlayer(p1);
-                                }
+                            // Sync HUD score 
+                            updateHUD(p1.score, storedHighScore, currentLevel);
 
-                                // Sync HUD score
-                                updateHUD(p1.score, storedHighScore, currentLevel);
+                            // Sync lives display 
+                            setLives(currentLives);
 
-                                // Sync lives display (only redraws when value changes)
-                                setLives(currentLives);
+                            // Win/lose check 
+                            if (p1.state.equals("DEAD") && !state.equals("LOSE")) {
+                                state = "LOSE";
+                                stop();
+                                handleLose(p1);
+                                return;
+                            }
 
-                                // Win/lose check
-                                if (p1.state.equals("DEAD") && !state.equals("LOSE")) {
-                                    state = "LOSE";
+                            if (allPelletsConsumed()) {
+                                if (!state.equals("WIN")) {
+                                    state = "WIN";
                                     stop();
-                                    handleLose(p1);
+                                    handleWin();
                                     return;
-                                }
-
-                                if (allPelletsConsumed()) {
-                                    if (!state.equals("WIN")) {
-                                        state = "WIN";
-                                        stop();
-                                        handleWin();
-                                        return;
-                                    }
                                 }
                             }
                         }
                     }
+                }
             };
             gameLoop.start();
         });
@@ -211,7 +204,7 @@ public class GameSceneController implements Initializable {
 
     // ── HUD ───────────────────────────────────────────────────────
 
-    /** Syncs score, high score, and level labels. Called every game tick. */
+    /** Syncs score, high score, and level labels. Called every game tick.  */
     public void updateHUD(int score, int highScore, int level) {
         currentScore = score;
         currentLevel = level;
@@ -221,7 +214,7 @@ public class GameSceneController implements Initializable {
         levelLabel.setText(String.valueOf(level));
     }
 
-    /** Refreshes the ● life icons. Only redraws when the count actually changes. */
+    /** Refreshes the ● life icons. Only redraws when the count actually changes.  */
     public void setLives(int lives) {
         if (lives != currentLives) {
             currentLives = lives;
@@ -241,7 +234,7 @@ public class GameSceneController implements Initializable {
 
     // ── Countdown ─────────────────────────────────────────────────
 
-    /** Shows 3 → 2 → 1 → GO!, then calls onGo. */
+    /** Shows 3 → 2 → 1 → GO!, then calls onGo.  */
     public void startCountdown(Runnable onGo) {
         countdownOverlay.setVisible(true);
         countdownOverlay.setManaged(true);
@@ -273,15 +266,15 @@ public class GameSceneController implements Initializable {
 
     // ── Game over ─────────────────────────────────────────────────
 
-    /** Stops the loop and navigates to the Game Over screen. */
+    /** Stops the loop and navigates to the Game Over screen.  */
     public void triggerGameOver() {
         if (gameLoop != null) gameLoop.stop();
-        SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel);
+        SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2");
     }
 
     // ── Pause ─────────────────────────────────────────────────────
-    @FXML private void onPause() {
-        // Enter PAUSED state; stop game rules
+    @FXML 
+    private void onPause() {
         state = "PAUSED";
         pauseOverlay.setVisible(true);
         pauseOverlay.setManaged(true);
@@ -292,8 +285,8 @@ public class GameSceneController implements Initializable {
         timerLabel.setText(TimerDisplay.formatElapsedTime(elapsedTimerMillis));
     }
 
-    @FXML private void onResume() {
-        // Resume the game from PAUSED
+    @FXML 
+    private void onResume() {
         state = "ACTIVE";
         pauseOverlay.setVisible(false);
         pauseOverlay.setManaged(false);
@@ -303,7 +296,6 @@ public class GameSceneController implements Initializable {
         }
     }
 
-    // Check whether any pellets remain on the map
     private boolean allPelletsConsumed() {
         if (this.gameMap == null) return false;
         for (int x = 0; x < this.gameMap.getCols(); x++) {
@@ -320,27 +312,25 @@ public class GameSceneController implements Initializable {
     }
 
     private void handleLose(Player p) {
-        // Game rules already stopped; play death animation after short delay,
-        // then navigate to Game Over screen.
         PauseTransition beforeDie = new PauseTransition(Duration.millis(300));
         beforeDie.setOnFinished(e -> p.die());
 
         PauseTransition toStats = new PauseTransition(Duration.millis(1200));
-        toStats.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel));
+        toStats.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2"));
 
         SequentialTransition seq = new SequentialTransition(beforeDie, toStats);
         seq.play();
     }
 
     private void handleWin() {
-        // Brief win delay/sound then show statistics
         PauseTransition winDelay = new PauseTransition(Duration.millis(800));
-        winDelay.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel));
+        winDelay.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2"));
         winDelay.play();
     }
 
     // ── Navigation ────────────────────────────────────────────────
-    @FXML private void onMainMenu() {
+    @FXML 
+    private void onMainMenu() {
         if (gameLoop != null) gameLoop.stop();
         SceneManager.goTo(SceneManager.MENU);
     }

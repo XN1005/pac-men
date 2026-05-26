@@ -11,8 +11,9 @@ public class Player extends Entity implements Collision {
     public Circle sprite;
     public int score;
     public int num;
+    private String name;
     public String state;
-    public int combo = 0;   // start combo = 0
+    public int combo = 0;
     private GameMap map;
     public int currentCol;
     public int currentRow;
@@ -25,17 +26,20 @@ public class Player extends Entity implements Collision {
         this.keysPressed = keysPressed;
     }
     
-    // initialize player
-    public Player(GameMap map, double speed, int num, int col, int row) throws Exception {
-        /** x-coordinates for players:
-         * player num 1: x = 180
-         * player num 3: x = 360
-         * (basically different spawn points)
-         */
+    public Player(GameMap map, double speed, int num, int col, int row, String name) throws Exception {
         super((col * 20) + 10, (row * 20) + 10, speed);
     
         this.num = num;
         this.score = 0;
+        
+        // Use the custom name if provided
+        // otherwise use a default name
+        if (name != null && !name.trim().isEmpty()) {
+            this.name = name.trim();
+        } else {
+            this.name = "Player" + num;
+        }
+
         this.state = "ACTIVE";
         this.combo = 0;
         this.powerUpTime = 0;
@@ -44,21 +48,30 @@ public class Player extends Entity implements Collision {
         this.currentCol = col;
         this.currentRow = row;
 
-        
         if (this.num == 1) {
             this.sprite = new Circle(15, Color.YELLOW);
-            this.sprite.setCenterX((col * 20) + 10); // 9 for multi, 14 for single
-            this.sprite.setCenterY((row * 20) + 10); // 17 for multi and single
+            this.sprite.setCenterX((col * 20) + 10); 
+            this.sprite.setCenterY((row * 20) + 10); 
         }
         else if (this.num == 2) {
             this.sprite = new Circle(15, Color.RED);
-            this.sprite.setCenterX((col * 20) + 10); // 18 for multi
-            this.sprite.setCenterY((row * 20) + 10); // 17 for multi
+            this.sprite.setCenterX((col * 20) + 10); 
+            this.sprite.setCenterY((row * 20) + 10); 
         }
         else {
             throw new Exception();
         }
-          
+    }
+
+    // setters, getters for name
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        if (name != null && !name.trim().isEmpty()) {
+            this.name = name.trim();
+        }
     }
 
     @Override
@@ -75,19 +88,19 @@ public class Player extends Entity implements Collision {
             if (elapsedSeconds >= 10.0) {
                 this.state = "ACTIVE";
                 this.combo = 0; // Reset kill combo after power-up expires
-        }
+            }
         }
         // set player movement
         // CELL_SIZE = 20
-        // 1. Get current logical position
+        // Get current logical position
         this.currentCol = (int) Math.round((x - 10) / 20.0);
         this.currentRow = (int) Math.round((y - 10) / 20.0);
 
-        // 2. Determine requested direction
+        // Determine requested direction
         char dir = requestMovementDirection();
         this.direction = toDirection(dir);
         
-        // 3. Predict the NEXT grid cell
+        // Predict the NEXT grid cell
         int targetCol = this.currentCol;
         int targetRow = this.currentRow;
 
@@ -97,9 +110,7 @@ public class Player extends Entity implements Collision {
             targetRow = calculateNewRowPos(y, speed, dir);
         }
 
-
-
-        // 4. Validate with Map and Move
+        // Validate with Map and Move
         if (this.map.isMoveValid(this, targetCol, targetRow)) {
             if (dir == 'r') x += speed;
             if (dir == 'l') x -= speed;
@@ -120,47 +131,30 @@ public class Player extends Entity implements Collision {
                 this.sprite.setCenterY((currentRow * 20) + 10);
             }
             
-            // 5. Trigger interactions (Pellets, etc.)
+            // Trigger interactions (Pellets, etc.)
             map.getCell(targetCol, targetRow).onSteppedOn(this);
         }
     }
     
-    // helper function for update(), determine users' requested movement direction
     private char requestMovementDirection() {
         if (this.num == 1) {
             if (keysPressed.contains(KeyCode.W) || keysPressed.contains(KeyCode.S)) {
-                if (keysPressed.contains(KeyCode.W)) {
-                    return 'u';
-                }
-                if (keysPressed.contains(KeyCode.S)) {
-                    return 'd';
-                }
+                if (keysPressed.contains(KeyCode.W)) return 'u';
+                if (keysPressed.contains(KeyCode.S)) return 'd';
             }
             else {
-                if (keysPressed.contains(KeyCode.A)) {
-                    return 'l';
-                }
-                if (keysPressed.contains(KeyCode.D)) {
-                    return 'r';
-                }
+                if (keysPressed.contains(KeyCode.A)) return 'l';
+                if (keysPressed.contains(KeyCode.D)) return 'r';
             }
         }
         else if (this.num == 2) {
             if (keysPressed.contains(KeyCode.UP) || keysPressed.contains(KeyCode.DOWN)) {
-                if (keysPressed.contains(KeyCode.UP)) {
-                    return 'u';
-                }
-                if (keysPressed.contains(KeyCode.DOWN)) {
-                    return 'd';
-                }      
+                if (keysPressed.contains(KeyCode.UP)) return 'u';
+                if (keysPressed.contains(KeyCode.DOWN)) return 'd';      
             }
             else {
-                if (keysPressed.contains(KeyCode.LEFT)) {
-                    return 'l';
-                }            
-                if (keysPressed.contains(KeyCode.RIGHT)) {
-                    return 'r';
-                }
+                if (keysPressed.contains(KeyCode.LEFT)) return 'l';            
+                if (keysPressed.contains(KeyCode.RIGHT)) return 'r';
             }
         }
         return 'x';
@@ -184,65 +178,30 @@ public class Player extends Entity implements Collision {
         return this.direction;
     }
     
-    @Override
-    public void render() {
-        // draw player
-    }
-
-    // ----- COLLISIONS -------------------------------------------
-    public void consumePellet() {
-        this.score += 10;
-    }
-    public void consumePowerPellet() {
+    @Override public void render() {}
+    @Override public void consumePellet() { this.score += 10; }
+    @Override public void consumePowerPellet() {
         this.score += 50;
-        this.state = "POWER_UP"; // Power up State
+        this.state = "POWER_UP"; 
         this.powerUpTime = System.nanoTime();
     }
-    public void collideCherry() {
-        this.score += 5;
-    }
-
-    @Override
-    public void collideGhost() {
-        if (!this.state.equals("POWER_UP")) {
-            this.state = "DEAD";
-        }
-    }
+    @Override public void collideCherry() { this.score += 5; }
+    @Override public void collideGhost() { if (!this.state.equals("POWER_UP")) this.state = "DEAD"; }
 
     public void collideGhost(Ghost ghost) {
         if (this.state.equals("POWER_UP")) {
             if (ghost.currentState != Ghost.GhostState.EATEN) {
                 ghost.already_eaten = true;
-                this.score += 200 * (int) (Math.pow(2, this.combo));    // stated requirement
+                this.score += 200 * (int) (Math.pow(2, this.combo));    
                 this.combo++;
             }
         } else {
             this.state = "DEAD";
         }
     }
-    public void collidePlayer() {
-        // acts as a wall? cannot bypass each other (can trap, block paths, ...)
-        // No, players can cross each other
-        // TODO: complete method
-    }
-
-    // ----- 3. STATES -------------------------------------------
-    public void powerUp() {
-        // Turn on power up mode for a set amount of time, changing collision interactions
-    }
-
-    public void disable() {
-        // Disabled for before game play; Disable all movements
-        this.state = "DISABLED";
-    }
-
-    public void enable() {
-        // enables movement
-        this.state = "ACTIVE";
-    }
-
-    public void die() {
-        this.state = "DEAD";
-        // TODO: Run Animation
-    }
+    public void collidePlayer() {}
+    public void powerUp() {}
+    public void disable() { this.state = "DISABLED"; }
+    public void enable() { this.state = "ACTIVE"; }
+    public void die() { this.state = "DEAD"; }
 }

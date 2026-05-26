@@ -26,6 +26,7 @@
             <!-- Score -->
             <VBox alignment="CENTER_LEFT" spacing="3" HBox.hgrow="ALWAYS">
                 <Label styleClass="hud-label" text="SCORE"/>
+                <Label fx:id="p1NameLabel" styleClass="hud-label" text="PLAYER 1"/>
                 <Label fx:id="scoreLabel" styleClass="hud-value" text="000000"/>
             </VBox>
 

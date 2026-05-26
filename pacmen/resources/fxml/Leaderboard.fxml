@@ -42,6 +42,13 @@
 
         <Region prefHeight="24"/>
 
+        <Button text="✖  CLEAR LEADERBOARD"
+                styleClass="btn-red"
+                maxWidth="320"
+                onAction="#onClearLeaderboard"/>
+
+        <Region prefHeight="12"/>
+
         <Button text="↩  MAIN MENU"
                 styleClass="btn-cyan"
                 maxWidth="320"

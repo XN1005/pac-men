@@ -8,19 +8,11 @@ import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import pacmen.userinterface.TimerDisplay;
 import pacmen.util.SceneManager;
+import pacmen.datamanager.ScoreManager;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
-/**
- * Controls the Game Over screen.
- *
- * Reads final score, level, and elapsed time from SceneManager pending data
- * (set by SceneManager.goToGameOver(score, elapsedMillis, level)).
- *
- * Compares against a stored high score (replace the stub
- * below with your ScoreManager when ready).
- */
 public class GameOverSceneController implements Initializable {
 
     @FXML private StackPane rootPane;
@@ -32,33 +24,40 @@ public class GameOverSceneController implements Initializable {
     @FXML private Label     timeLabel;
     @FXML private Label     newHighScoreLabel;
 
-    // ── Replace with ScoreManager.getHighScore() when ready ──────
-    private static int storedHighScore = 0;
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Score and final time are passed via SceneManager pending data before navigation
         int finalScore = 0;
         long elapsedMillis = 0;
         int finalLevel = 1;
+        
+        // Setup baseline safety defaults
+        String p1Name = "Player1";
+        String p2Name = "Player2";
 
         SceneManager.GameOverData data = SceneManager.getPendingGameOverData();
         if (data != null) {
             finalScore = data.finalScore;
             elapsedMillis = data.elapsedMillis;
             finalLevel = data.level;
+            
+            // Collect the passed names from SceneManager
+            if (data.player1Name != null) p1Name = data.player1Name;
+            if (data.player2Name != null) p2Name = data.player2Name;
+            
             SceneManager.clearPendingGameOverData();
         }
 
-        // Update high score if beaten
+        int storedHighScore = ScoreManager.getInstance().getAbsoluteHighScore();
         boolean isNewHigh = finalScore > storedHighScore;
         if (isNewHigh) storedHighScore = finalScore;
+
+        // Commit high scores directly to the persistent file database
+        ScoreManager.getInstance().submitScore(p1Name, finalScore);
 
         populateStats(finalScore, storedHighScore, isNewHigh, finalLevel, elapsedMillis);
         animateEntrance(isNewHigh);
     }
 
-    // ── Populate ──────────────────────────────────────────────────
     private void populateStats(int score, int highScore, boolean isNewHigh, int level, long elapsedMillis) {
         finalScoreLabel.setText(String.format("%06d", score));
         highScoreLabel.setText(String.format("%06d", highScore));
@@ -72,7 +71,6 @@ public class GameOverSceneController implements Initializable {
         }
     }
 
-    // ── Entrance animation ────────────────────────────────────────
     private void animateEntrance(boolean isNewHigh) {
         titleLabel.setOpacity(0);
         FadeTransition fadeTitle = new FadeTransition(Duration.millis(600), titleLabel);
@@ -80,7 +78,6 @@ public class GameOverSceneController implements Initializable {
         fadeTitle.play();
 
         if (isNewHigh) {
-            // Pulsing flash on the new high score badge
             Timeline flash = new Timeline(
                 new KeyFrame(Duration.millis(0),   new KeyValue(newHighScoreLabel.opacityProperty(), 1.0)),
                 new KeyFrame(Duration.millis(400), new KeyValue(newHighScoreLabel.opacityProperty(), 0.2)),
@@ -93,7 +90,6 @@ public class GameOverSceneController implements Initializable {
         }
     }
 
-    // ── Navigation ────────────────────────────────────────────────
     @FXML private void onPlayAgain()   { SceneManager.goTo(SceneManager.GAME); }
     @FXML private void onMultiplayer() { SceneManager.goTo(SceneManager.MULTIPLAYER); }
     @FXML private void onMainMenu()    { SceneManager.goTo(SceneManager.MENU); }

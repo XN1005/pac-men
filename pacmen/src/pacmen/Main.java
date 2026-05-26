@@ -14,7 +14,6 @@ public class Main extends Application {
         ScoreManager.getInstance();
         stage.setOnCloseRequest(event -> {
             System.out.println("Application shutting down. Saving game history...");
-            ScoreManager.getInstance().saveHistory();
         });
 
         SceneManager.init(stage);

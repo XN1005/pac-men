@@ -1,24 +1,25 @@
 package pacmen.datamanager;
 
-import java.io.*;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 public class ScoreManager {
     private static ScoreManager instance;
 
-    // active game scores
+    // Active tracking variables
+    private String player1Name = "Player1";
+    private String player2Name = "Player2";
     private int player1Score = 0;
     private int player2Score = 0;
 
-    // history tracking (up to 10 games)
-    private LinkedList<String> gameHistory;
-    private static final int MAX_HISTORY = 10;
     private static final String DATA_FILE = "resources/data/data.txt";
+    private Map<String, Integer> globalScores;
 
     private ScoreManager() {
-        gameHistory = new LinkedList<>();
-        loadHistory();
+        globalScores = new HashMap<>();
+        loadGlobalScores();
     }
 
     public static ScoreManager getInstance() {
@@ -28,7 +29,15 @@ public class ScoreManager {
         return instance;
     }
 
-    // active game logic
+    // active game player names and scoring
+    public void setPlayerNames(String p1Name, String p2Name) {
+        if (p1Name != null && !p1Name.trim().isEmpty()) this.player1Name = p1Name.trim();
+        if (p2Name != null && !p2Name.trim().isEmpty()) this.player2Name = p2Name.trim();
+    }
+
+    public String getPlayer1Name() { return player1Name; }
+    public String getPlayer2Name() { return player2Name; }
+
     public void addScore(int playerNum, int points) {
         if (playerNum == 1) {
             player1Score += points;
@@ -37,97 +46,63 @@ public class ScoreManager {
         }
     }
 
-    public int getPlayer1Score() {
-        return player1Score;
-    }
-    public int getPlayer2Score() {
-        return player2Score;
-    }
+    public int getPlayer1Score() { return player1Score; }
+    public int getPlayer2Score() { return player2Score; }
 
     public void resetScores() {
         player1Score = 0;
         player2Score = 0;
+        player1Name = "Player1";
+        player2Name = "Player2";
     }
 
-    // end of game logic
-    // data is saved to history
-    public void recordGameEnd(String mode, String status) {
-        // create record string, CSV style
-        String record = mode + "," + player1Score + "," + player2Score + "," + status;
+    // leaderboard data storage process
+    public void loadGlobalScores() {
+        globalScores.clear();
+        List<String> lines = SaveSystem.loadLines(DATA_FILE);
+
+        for (String line : lines) {
+            String trimmed = line.trim();
+            if (trimmed.isEmpty()) continue;
+
+            int lastSpaceIndex = trimmed.lastIndexOf(' ');
+            if (lastSpaceIndex == -1) continue;   
+
+            try {
+                String name = trimmed.substring(0, lastSpaceIndex).trim();
+                int score = Integer.parseInt(trimmed.substring(lastSpaceIndex + 1).trim());
+                globalScores.merge(name, score, Math::max);
+            } catch (NumberFormatException e) {
+                System.err.println("Skipping malformed score line: " + line);
+            }
+        }
+    }
+
+    public void submitScore(String playerName, int score) {
+        if (playerName == null || playerName.trim().isEmpty()) return;
         
-        // add to top of history list, keep only 10 recent games
-        gameHistory.addFirst(record);
-        if (gameHistory.size() > MAX_HISTORY) {
-            gameHistory.removeLast();
-        }
+        loadGlobalScores();
+        globalScores.merge(playerName.trim(), score, Math::max);
 
-        // save updated list to text file
-        saveHistory();
+        List<String> output = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : globalScores.entrySet()) {
+            output.add(entry.getKey() + " " + entry.getValue());
+        }
+        SaveSystem.saveLines(DATA_FILE, output);
     }
 
-    // file input-output logic
-    private void loadHistory() {
-        File file = new File(DATA_FILE);
-        if (!file.exists()) {
-            return;
-        }
-        
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                gameHistory.add(line);
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to load history:");
-            System.err.println(e.getMessage());
-        }
+    public void clearLeaderboard() {
+        globalScores.clear();
+        SaveSystem.saveLines(DATA_FILE, new ArrayList<>());
     }
 
-    public void saveHistory() {
-        File file = new File(DATA_FILE);
-        // ensure dir exists
-        file.getParentFile().mkdirs();
-
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
-            for (String record: gameHistory) {
-                bw.write(record);
-                bw.newLine();
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to save history:");
-            System.err.println(e.getMessage());
-        }
+    public int getAbsoluteHighScore() {
+        loadGlobalScores();
+        return globalScores.values().stream().max(Integer::compareTo).orElse(0);
     }
 
-    // high score calculator (for ui)
-    // this calculates the highest score in the past games
-    // only for 2-player games
-    public int getAbsoluteHighScore2Player() {
-        int highest = 0;
-        for (String record : gameHistory) {
-            String[] parts = record.split(",");
-            if (parts.length >= 3) {
-                int p1 = Integer.parseInt(parts[1]);
-                int p2 = Integer.parseInt(parts[2]);
-                highest = Math.max(highest, Math.max(p1, p2));
-            }
-        }
-        return highest;
-    }
-
-    public int getAbsoluteHighScore1Player() {
-        int highest = 0;
-        for (String record : gameHistory) {
-            String[] parts = record.split(",");
-            if (parts.length < 3) {
-                int p1 = Integer.parseInt(parts[1]);
-                highest = Math.max(highest, p1);
-            }
-        }
-        return highest;
-    }
-
-    public List<String> getHistory() {
-        return gameHistory;
+    public Map<String, Integer> getGlobalScores() {
+        loadGlobalScores();
+        return globalScores;
     }
 }

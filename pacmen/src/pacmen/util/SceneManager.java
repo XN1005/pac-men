@@ -17,7 +17,7 @@ import java.io.File;
  */
 public class SceneManager {
 
-    // ── Scene name constants ──────────────────────────────────────
+    // Scene name constants
     public static final String MENU        = "resources/fxml/Mainmenu.fxml";
     public static final String GAME        = "resources/fxml/Gamescene.fxml";
     public static final String GAME_OVER   = "resources/fxml/Gameoverscene.fxml";
@@ -58,18 +58,20 @@ public class SceneManager {
         }
     }
 
-    /**
-     * Shortcut: navigate to Game Over and pass the final score, elapsed time, and level.
-     * The GameOverSceneController reads this from stored pending game over data.
-     */
+    // Game over data pass pipeline
     private static GameOverData pendingGameOverData;
 
+    // Overloaded backup option if code elsewhere doesn't provide names yet
     public static void goToGameOver(int finalScore) {
-        goToGameOver(finalScore, 0, 1);
+        goToGameOver(finalScore, 0, 1, "Player1", "Player2");
     }
 
-    public static void goToGameOver(int finalScore, long elapsedMillis, int level) {
-        pendingGameOverData = new GameOverData(finalScore, elapsedMillis, level);
+    /**
+     * Primary navigate to Game Over shortcut.
+     * Passes metrics and custom player names down to the controller lifecycle.
+     */
+    public static void goToGameOver(int finalScore, long elapsedMillis, int level, String p1Name, String p2Name) {
+        pendingGameOverData = new GameOverData(finalScore, elapsedMillis, level, p1Name, p2Name);
         goTo(GAME_OVER);
     }
 
@@ -81,10 +83,9 @@ public class SceneManager {
         pendingGameOverData = null;
     }
 
-    // ── Internal ──────────────────────────────────────────────────
+    // Internal
     private static void loadScene(String fxmlPath) {
         try {
-            // Resolve file path relative to project root
             File fxmlFile = new File(fxmlPath);
             
             if (!fxmlFile.exists()) {
@@ -119,15 +120,20 @@ public class SceneManager {
         }
     }
 
+    // Updated data bundle class to support string transmission
     public static class GameOverData {
         public final int finalScore;
         public final long elapsedMillis;
         public final int level;
+        public final String player1Name;
+        public final String player2Name;
 
-        public GameOverData(int finalScore, long elapsedMillis, int level) {
+        public GameOverData(int finalScore, long elapsedMillis, int level, String player1Name, String player2Name) {
             this.finalScore = finalScore;
             this.elapsedMillis = elapsedMillis;
             this.level = level;
+            this.player1Name = player1Name;
+            this.player2Name = player2Name;
         }
     }
 }
