@@ -28,6 +28,7 @@ public class BFSPathfinder {
             int currentDirection,
             boolean allowReverse
     ) {
+        System.out.println("BFS: " + targetX + " " + targetY);
         if (map == null || ghost == null) {
             return fixDirection(currentDirection);
         }
@@ -104,7 +105,7 @@ public class BFSPathfinder {
                 queue.add(new int[]{nextX, nextY});
             }
         }
-
+        // System.out.print("OK");
         return chooseGreedyDirection(
                 map,
                 ghost,
@@ -141,7 +142,6 @@ public class BFSPathfinder {
                 currentDirection,
                 allowReverse
         );
-
         if (legalDirections.isEmpty()) {
             return currentDirection;
         }

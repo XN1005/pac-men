@@ -8,7 +8,13 @@ import pacmen.map.GameMap;
 public class Ghost extends Entity {
     // States
     public enum GhostState { SCATTER, CHASE, FRIGHTENED, EATEN }
-    
+    private static final int SPAWN_MIN_X = 9;
+    private static final int SPAWN_MAX_X = 18;
+    private static final int SPAWN_MIN_Y = 12;
+    private static final int SPAWN_MAX_Y = 15;
+    private static final int HOUSE_CENTER_X = 11;
+    private static final int HOUSE_CENTER_Y = 14;
+
     private final double baseSpeed;     // default speed, set later
     public  GhostState currentState;    // Public for player accessibility
     private Color baseColor;
@@ -19,9 +25,8 @@ public class Ghost extends Entity {
     public Circle sprite;
 
     // Acts as switchers
-    public boolean already_eaten; 
+    public boolean already_eaten;
     public boolean already_frightened;
-
     public Ghost(GameMap map, double x, double y, double speed, Color color) {
         this(map, x, y, speed, color, null, "blinky");
         this.already_eaten = false;
@@ -48,6 +53,11 @@ public class Ghost extends Entity {
     public void update() {
         // change direction at the center of a tile
         if (isAtCenterOfTile()) {
+            if (currentState == GhostState.EATEN && isAtHouseTile()) {
+                System.out.println("Recovered");
+                currentState = GhostState.SCATTER;
+            }
+            System.out.println("At Center");
             updateTarget();
             chooseNextDirection();
         }
@@ -61,7 +71,7 @@ public class Ghost extends Entity {
 
     private void updateTarget() {
         int[] target;
-
+        System.out.println("Updated Target");
         switch (currentState) {
             case SCATTER:
                 target = TargetingStrategy.getScatterTarget(ghostName, map.getCols(), map.getRows());
@@ -87,6 +97,7 @@ public class Ghost extends Entity {
 
         this.targetX = target[0];
         this.targetY = target[1];
+        System.out.println(this.targetX + " " + this.targetY);
     }
 
     private int[] getChaseTarget() {
@@ -106,14 +117,15 @@ public class Ghost extends Entity {
     }
 
     private void chooseNextDirection() {
-        boolean allowReverse = currentState == GhostState.EATEN;
+        // Allow reverse if EATEN -OR- if they are inside the ghost house trying to leave!
+        boolean allowReverse = currentState == GhostState.EATEN || isInsideSpawnArea(getGridX(), getGridY());
         this.direction = BFSPathfinder.getNextDirection(
                 map,
                 this,
                 getGridX(),
                 getGridY(),
-                targetX,
-                targetY,
+                this.targetX,
+                this.targetY,
                 direction,
                 allowReverse
         );
@@ -157,6 +169,24 @@ public class Ghost extends Entity {
         return this.baseSpeed;
     }
 
+    public boolean isAtHouseTile() {
+        return getGridX() == HOUSE_CENTER_X && getGridY() == HOUSE_CENTER_Y;
+    }
+
+    public boolean isInsideSpawnArea(int gridX, int gridY) {
+        return gridX >= SPAWN_MIN_X
+                && gridX <= SPAWN_MAX_X
+                && gridY >= SPAWN_MIN_Y
+                && gridY <= SPAWN_MAX_Y;
+    }
+
+    public boolean canOccupyTile(int gridX, int gridY) {
+        if (currentState == GhostState.EATEN) {
+            return true;
+        }
+        return !isInsideSpawnArea(gridX, gridY);
+    }
+
     public void setSpeed(double speed) {
         this.speed = speed;
     }
@@ -175,7 +205,7 @@ public class Ghost extends Entity {
         }
         else return;
     }
- 
+
     @Override
     public void render() {}
 }

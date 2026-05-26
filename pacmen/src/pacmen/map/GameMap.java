@@ -5,7 +5,7 @@ import pacmen.entities.Entity;
 public class GameMap {
     private static final int CELL_SIZE = 20;    
     private static final int COLS = 28;         // x-coordinate
-    private static final int ROWS = 36;         // y-coordinate
+    private static final int ROWS = 31;         // y-coordinate
 
     private Cell[][] grid;
 

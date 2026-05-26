@@ -152,10 +152,12 @@ public class TargetingStrategy {
         String name = cleanName(ghostName);
 
         if (name.contains("blinky") || name.contains("red")) {
+            System.out.println(mapCols - 1);
             return new int[]{mapCols - 1, 0};
         }
 
         if (name.contains("pinky") || name.contains("pink")) {
+            System.out.println(2);
             return new int[]{0, 0};
         }
 
@@ -166,12 +168,12 @@ public class TargetingStrategy {
         if (name.contains("clyde") || name.contains("orange")) {
             return new int[]{0, mapRows - 1};
         }
-
+        System.out.println(5);
         return new int[]{0, 0};
     }
 
     public static int[] getGhostHouseTarget(int mapCols, int mapRows) {
-        int targetX = 14;
+        int targetX = 11;
         int targetY = 14;
 
         return new int[]{

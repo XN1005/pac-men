@@ -15,7 +15,7 @@ public class MapLoader {
             String line;
             int row = 0;
 
-            while ((line = br.readLine()) != null && row < 36) {
+            while ((line = br.readLine()) != null && row < 31) {
                 for (int col = 0; col < line.length() && col < 28; col++) {
                     char symbol = line.charAt(col);
                     
