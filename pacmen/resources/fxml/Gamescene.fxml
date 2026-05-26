@@ -35,6 +35,12 @@
                 <Label fx:id="levelLabel" styleClass="hud-value" text="1"/>
             </VBox>
 
+            <!-- Time -->
+            <VBox alignment="CENTER" spacing="3" HBox.hgrow="ALWAYS">
+                <Label styleClass="hud-label" text="TIME"/>
+                <Label fx:id="timerLabel" styleClass="hud-value" text="00:00"/>
+            </VBox>
+
             <!-- Lives -->
             <VBox alignment="CENTER" spacing="3" HBox.hgrow="ALWAYS">
                 <Label styleClass="hud-label" text="LIVES"/>

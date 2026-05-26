@@ -10,7 +10,7 @@ public class Wall extends Entity {
         // Walls don't move, so speed is 0
         super(x, y, 0);
         // CELL_SIZE is 20
-        this.sprite = new Rectangle(20, 20, Color.BLUE);
+        this.sprite = new Rectangle(10, 10, Color.BLUE);
         this.sprite.setX(x);
         this.sprite.setY(y);
     }

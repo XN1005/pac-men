@@ -10,5 +10,6 @@
         "..\\javaFX21\\javafx-sdk-21.0.11\\lib\\javafx.swing.jar",
         "..\\javaFX21\\javafx-sdk-21.0.11\\lib\\javafx.web.jar",
         "..\\javaFX21\\javafx-sdk-21.0.11\\lib\\javafx-swt.jar"
-    ]
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }

@@ -212,3 +212,27 @@
 }
 .status-dot-ready    { -fx-text-fill: #00FF88; -fx-font-size:16px; }
 .status-dot-waiting  { -fx-text-fill: #FFD700; -fx-font-size:16px; }
+
+/* ── Leaderboard rows ──────────────────────────────────────── */
+.leaderboard-row {
+    -fx-background-color: rgba(0,255,255,0.06);
+    -fx-border-color: rgba(0,255,255,0.15);
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 12 14;
+}
+.leaderboard-rank {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: #FFD700;
+    -fx-min-width: 56;
+}
+.leaderboard-name {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: #00FFFF;
+}
+.leaderboard-score {
+    -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: #FFD700;
+}

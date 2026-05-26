@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane xmlns="http://javafx.com/javafx/25"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="pacmen.scene.Leaderboard"
+           stylesheets="@../css/arcade.css"
+           fx:id="rootPane"
+           prefWidth="900" prefHeight="650">
+
+    <Pane styleClass="bg-pane" maxWidth="Infinity" maxHeight="Infinity" mouseTransparent="true"/>
+
+    <Pane mouseTransparent="true">
+        <Label style="-fx-font-size:44px;-fx-text-fill:rgba(255,59,59,0.15);" text="ᗣ" layoutX="50" layoutY="70"/>
+        <Label style="-fx-font-size:44px;-fx-text-fill:rgba(255,182,255,0.15);" text="ᗣ" layoutX="800" layoutY="90"/>
+        <Label style="-fx-font-size:44px;-fx-text-fill:rgba(77,204,255,0.15);" text="ᗣ" layoutX="36" layoutY="510"/>
+        <Label style="-fx-font-size:44px;-fx-text-fill:rgba(255,165,0,0.15);" text="ᗣ" layoutX="816" layoutY="490"/>
+    </Pane>
+
+    <VBox alignment="CENTER" spacing="0" style="-fx-padding:40 80 36 80;">
+        <Label styleClass="scene-title" text="LEADERBOARD"/>
+        <Region prefHeight="8"/>
+        <Label styleClass="scene-subtitle" text="TOP SCORES"/>
+
+        <Region prefHeight="28"/>
+
+        <VBox styleClass="panel-box" spacing="12" maxWidth="620" prefWidth="620" alignment="TOP_CENTER">
+            <HBox alignment="CENTER_LEFT" spacing="14" prefWidth="620" maxWidth="620" style="-fx-padding:0 14 6 14;">
+                <Label styleClass="stat-label" text="RANK" minWidth="56" prefWidth="56" maxWidth="56"/>
+                <Label styleClass="stat-label" text="PLAYER" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Label styleClass="stat-label" text="SCORE" minWidth="110" prefWidth="110" maxWidth="110" alignment="CENTER_RIGHT"/>
+            </HBox>
+            <Region styleClass="neon-divider" maxWidth="620" prefWidth="620"/>
+            <VBox fx:id="leaderboardRows" spacing="8" alignment="TOP_CENTER" prefWidth="620" maxWidth="620"/>
+        </VBox>
+
+        <Region prefHeight="14"/>
+
+        <Label fx:id="statusLabel" styleClass="scene-subtitle" text="LOADING SCORES..."/>
+
+        <Region prefHeight="24"/>
+
+        <Button text="↩  MAIN MENU"
+                styleClass="btn-cyan"
+                maxWidth="320"
+                onAction="#onBack"/>
+    </VBox>
+</StackPane>

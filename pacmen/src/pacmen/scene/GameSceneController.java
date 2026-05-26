@@ -5,8 +5,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+// import javafx.scene.image.Image;
+// import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -21,6 +21,7 @@ import pacmen.map.GameMap;
 import pacmen.map.MapLoader;
 import pacmen.map.PelletCell;
 import pacmen.map.WallCell;
+import pacmen.userinterface.TimerDisplay;
 import pacmen.util.SceneManager;
 
 import java.io.File;
@@ -30,7 +31,6 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 public class GameSceneController implements Initializable {
-
     // ── FXML injections ───────────────────────────────────────────
     @FXML private StackPane rootPane;
     @FXML private Canvas    gameCanvas;      // kept in FXML but hidden behind gamePane
@@ -41,13 +41,18 @@ public class GameSceneController implements Initializable {
     @FXML private Label     scoreLabel;
     @FXML private Label     highScoreLabel;
     @FXML private Label     levelLabel;
+    @FXML private Label     timerLabel;
     @FXML private HBox      livesBox;
 
+    private long elapsedTimerMillis = 0;
+    private long lastTimerUpdateNanos = 0;
+
     // ── Game state ────────────────────────────────────────────────
-    private boolean    paused          = false;
+    private String     state           = "ACTIVE"; // ACTIVE, PAUSED, WIN, LOSE     
+    private GameMap    gameMap         = null;
     private int        currentScore    = 0;
-    private int        currentLives    = 3;
-    private int        currentLevel    = 1;
+    private int        currentLives    = 1;
+    private int        currentLevel    = 2;
     private static int storedHighScore = 0;
 
     // ── Input ─────────────────────────────────────────────────────
@@ -61,7 +66,7 @@ public class GameSceneController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         buildLivesDisplay(currentLives);
-        updateHUD(0, storedHighScore, 1);
+        updateHUD(0, storedHighScore, 2);
 
         // Wire keyboard input as soon as this scene is attached to a window
         rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
@@ -86,25 +91,26 @@ public class GameSceneController implements Initializable {
 
         // 2. Map
         GameMap gameMap = new GameMap();
-        MapLoader.loadMap(gameMap, "resources\\maps\\level1.txt");
+        this.gameMap = gameMap;
+        MapLoader.loadMap(gameMap, "resources/maps/level2.txt");
+        MapLoader.connectWallCells(gameMap);
 
         // 3. Players
         final Player[] players = new Player[2];
         try {
-            players[0] = new Player(gameMap, 1.5, 1, 14, 17);
+            players[0] = new Player(gameMap, 1.5, 1, 20, 14);
         } catch (Exception e) {
             e.printStackTrace();
         }
         if (players[0] != null) players[0].setInput(keysPressed);
-        if (players[1] != null) players[1].setInput(keysPressed);
         
         final Player p1 = players[0];
-        // final Player p2 = players[1];
 
         // 4. Ghosts
-        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA);
-        Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE);
-        Ghost g3 = new Ghost(gameMap, 270, 280, 1.5, Color.PINK);
+        // Limited to 3 ghosts
+        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.AQUA, p1, "blinky");
+        Ghost g2 = new Ghost(gameMap, 270, 280, 1.5, Color.ORANGE, p1, "clyde");
+        Ghost g3 = new Ghost(gameMap, 290, 280, 1.5, Color.PINK, p1, "pinky");
 
         // 5. Map cells (pellets, walls)
         for (int x = 0; x < 28; x++) {
@@ -120,40 +126,84 @@ public class GameSceneController implements Initializable {
         }
 
         // 6. Map border image
-        File imageFile = new File("resources/assets/MAP_Level1.png");
-        Image image = new Image(imageFile.toURI().toString());
-        ImageView imageView = new ImageView(image);
-        imageView.setFitWidth(560);
-        imageView.setPreserveRatio(true);
+        // File imageFile = new File("resources/assets/MAP_Level1.png");
+        // Image image = new Image(imageFile.toURI().toString());
+        // ImageView imageView = new ImageView(image);
+        // imageView.setFitWidth(560);
+        // imageView.setPreserveRatio(true);
 
         // 7. Add everything to the pane (same order as original Main.java)
         gamePane.getChildren().addAll(p1.sprite);
-        gamePane.getChildren().add(imageView);
+        //gamePane.getChildren().add(imageView);
         gamePane.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite);
 
         // 8. Countdown → then start the game loop
         startCountdown(() -> {
+            elapsedTimerMillis = 0;
+            lastTimerUpdateNanos = System.nanoTime();
+            updateTimerDisplay();
+
             gameLoop = new AnimationTimer() {
                 @Override
                 public void handle(long now) {
-                    p1.update();
-                    // p2.update();
-                    g1.update();
-                    g2.update();
-                    g3.update();
+                        long deltaMillis = (now - lastTimerUpdateNanos) / 1_000_000;
+                        if (deltaMillis > 0) {
+                            lastTimerUpdateNanos = now;
+                            
+                            // GAME ACTIVE UPDATE
+                            if (state.equals("ACTIVE")) {
+                                elapsedTimerMillis += deltaMillis;
+                                updateTimerDisplay();
 
-                    // Sync HUD score
-                    updateHUD(p1.score, storedHighScore, currentLevel);
+                                p1.update();
+                                g1.update();
+                                g2.update();
+                                g3.update();
+                                
+                                if (p1.state.equals("POWER_UP")) {
 
-                    // Sync lives display (only redraws when value changes)
-                    setLives(currentLives);
+                                }
 
-                    // Win/lose check
-                    if (p1.state.equals("DEAD")) /* || p2.state.equals("DEAD") */ {
-                        stop();
-                        triggerGameOver();
+                                // Calculate euclidean distance from player to ghost. <= 1 then collision occurs
+                                
+                                if (Math.pow(Math.pow(p1.currentCol - g1.getGridX(), 2) + Math.pow(p1.currentRow - g1.getGridY(), 2), 0.5) <= 1) {
+                                    p1.collideGhost(g1);
+                                    g1.collidePlayer(p1);
+                                }
+                                if (Math.pow(Math.pow(p1.currentCol - g2.getGridX(), 2) + Math.pow(p1.currentRow - g2.getGridY(), 2), 0.5) <= 1) {
+                                    p1.collideGhost(g2);
+                                    g2.collidePlayer(p1);
+                                }
+                                if (Math.pow(Math.pow(p1.currentCol - g3.getGridX(), 2) + Math.pow(p1.currentRow - g3.getGridY(), 2), 0.5) <= 1) {
+                                    p1.collideGhost(g3);
+                                    g3.collidePlayer(p1);
+                                }
+
+                                // Sync HUD score
+                                updateHUD(p1.score, storedHighScore, currentLevel);
+
+                                // Sync lives display (only redraws when value changes)
+                                setLives(currentLives);
+
+                                // Win/lose check
+                                if (p1.state.equals("DEAD") && !state.equals("LOSE")) {
+                                    state = "LOSE";
+                                    stop();
+                                    handleLose(p1);
+                                    return;
+                                }
+
+                                if (allPelletsConsumed()) {
+                                    if (!state.equals("WIN")) {
+                                        state = "WIN";
+                                        stop();
+                                        handleWin();
+                                        return;
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
             };
             gameLoop.start();
         });
@@ -226,23 +276,67 @@ public class GameSceneController implements Initializable {
     /** Stops the loop and navigates to the Game Over screen. */
     public void triggerGameOver() {
         if (gameLoop != null) gameLoop.stop();
-        SceneManager.goToGameOver(currentScore);
+        SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel);
     }
 
     // ── Pause ─────────────────────────────────────────────────────
     @FXML private void onPause() {
-        paused = !paused;
-        pauseOverlay.setVisible(paused);
-        pauseOverlay.setManaged(paused);
-        if (paused) { if (gameLoop != null) gameLoop.stop();  }
-        else        { if (gameLoop != null) gameLoop.start(); }
+        // Enter PAUSED state; stop game rules
+        state = "PAUSED";
+        pauseOverlay.setVisible(true);
+        pauseOverlay.setManaged(true);
+        if (gameLoop != null) gameLoop.stop();
+    }
+
+    private void updateTimerDisplay() {
+        timerLabel.setText(TimerDisplay.formatElapsedTime(elapsedTimerMillis));
     }
 
     @FXML private void onResume() {
-        paused = false;
+        // Resume the game from PAUSED
+        state = "ACTIVE";
         pauseOverlay.setVisible(false);
         pauseOverlay.setManaged(false);
-        if (gameLoop != null) gameLoop.start();
+        if (gameLoop != null) {
+            lastTimerUpdateNanos = System.nanoTime();
+            gameLoop.start();
+        }
+    }
+
+    // Check whether any pellets remain on the map
+    private boolean allPelletsConsumed() {
+        if (this.gameMap == null) return false;
+        for (int x = 0; x < this.gameMap.getCols(); x++) {
+            for (int y = 0; y < this.gameMap.getRows(); y++) {
+                Cell cell = this.gameMap.getCell(x, y);
+                if (cell instanceof PelletCell) {
+                    if (((PelletCell) cell).getPellet().state.equals("ACTIVE")) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private void handleLose(Player p) {
+        // Game rules already stopped; play death animation after short delay,
+        // then navigate to Game Over screen.
+        PauseTransition beforeDie = new PauseTransition(Duration.millis(300));
+        beforeDie.setOnFinished(e -> p.die());
+
+        PauseTransition toStats = new PauseTransition(Duration.millis(1200));
+        toStats.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel));
+
+        SequentialTransition seq = new SequentialTransition(beforeDie, toStats);
+        seq.play();
+    }
+
+    private void handleWin() {
+        // Brief win delay/sound then show statistics
+        PauseTransition winDelay = new PauseTransition(Duration.millis(800));
+        winDelay.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel));
+        winDelay.play();
     }
 
     // ── Navigation ────────────────────────────────────────────────

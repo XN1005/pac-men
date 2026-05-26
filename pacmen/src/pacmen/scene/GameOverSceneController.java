@@ -6,6 +6,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
+import pacmen.userinterface.TimerDisplay;
 import pacmen.util.SceneManager;
 
 import java.net.URL;
@@ -14,8 +15,8 @@ import java.util.ResourceBundle;
 /**
  * Controls the Game Over screen.
  *
- * Reads the final score from the scene root's UserData
- * (set by SceneManager.goToGameOver(score)).
+ * Reads final score, level, and elapsed time from SceneManager pending data
+ * (set by SceneManager.goToGameOver(score, elapsedMillis, level)).
  *
  * Compares against a stored high score (replace the stub
  * below with your ScoreManager when ready).
@@ -36,28 +37,34 @@ public class GameOverSceneController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Score is passed via UserData set before navigation
+        // Score and final time are passed via SceneManager pending data before navigation
         int finalScore = 0;
-        if (rootPane.getUserData() instanceof Integer) {
-            finalScore = (Integer) rootPane.getUserData();
+        long elapsedMillis = 0;
+        int finalLevel = 1;
+
+        SceneManager.GameOverData data = SceneManager.getPendingGameOverData();
+        if (data != null) {
+            finalScore = data.finalScore;
+            elapsedMillis = data.elapsedMillis;
+            finalLevel = data.level;
+            SceneManager.clearPendingGameOverData();
         }
 
         // Update high score if beaten
         boolean isNewHigh = finalScore > storedHighScore;
         if (isNewHigh) storedHighScore = finalScore;
 
-        populateStats(finalScore, storedHighScore, isNewHigh);
+        populateStats(finalScore, storedHighScore, isNewHigh, finalLevel, elapsedMillis);
         animateEntrance(isNewHigh);
     }
 
     // ── Populate ──────────────────────────────────────────────────
-    private void populateStats(int score, int highScore, boolean isNewHigh) {
+    private void populateStats(int score, int highScore, boolean isNewHigh, int level, long elapsedMillis) {
         finalScoreLabel.setText(String.format("%06d", score));
         highScoreLabel.setText(String.format("%06d", highScore));
 
-        // TODO: Replace placeholders with real values from Game state
-        levelLabel.setText("1");
-        timeLabel.setText("00:00");
+        levelLabel.setText(String.valueOf(level));
+        timeLabel.setText(TimerDisplay.formatElapsedTime(elapsedMillis));
 
         if (isNewHigh) {
             newHighScoreLabel.setVisible(true);

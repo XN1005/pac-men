@@ -6,7 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import pacmen.scene.GameSceneController;
+import pacmen.scene.*;
 
 import java.io.File;
 
@@ -22,10 +22,11 @@ public class SceneManager {
     public static final String GAME        = "resources/fxml/Gamescene.fxml";
     public static final String GAME_OVER   = "resources/fxml/Gameoverscene.fxml";
     public static final String MULTIPLAYER = "resources/fxml/Multiplayerscene.fxml";
+    public static final String LEADERBOARD = "resources/fxml/Leaderboard.fxml";
 
     private static Stage        primaryStage;
     private static final int    W = 900;
-    private static final int    H = 650;
+    private static final int    H = 700;
     private static final int    FADE_MS = 300;
 
     /** Call once from Main.java: SceneManager.init(primaryStage); */
@@ -58,12 +59,26 @@ public class SceneManager {
     }
 
     /**
-     * Shortcut: navigate to Game Over and pass the final score.
-     * The GameOverSceneController reads it from UserData.
+     * Shortcut: navigate to Game Over and pass the final score, elapsed time, and level.
+     * The GameOverSceneController reads this from stored pending game over data.
      */
+    private static GameOverData pendingGameOverData;
+
     public static void goToGameOver(int finalScore) {
-        primaryStage.getScene().getRoot().setUserData(finalScore);
+        goToGameOver(finalScore, 0, 1);
+    }
+
+    public static void goToGameOver(int finalScore, long elapsedMillis, int level) {
+        pendingGameOverData = new GameOverData(finalScore, elapsedMillis, level);
         goTo(GAME_OVER);
+    }
+
+    public static GameOverData getPendingGameOverData() {
+        return pendingGameOverData;
+    }
+
+    public static void clearPendingGameOverData() {
+        pendingGameOverData = null;
     }
 
     // ── Internal ──────────────────────────────────────────────────
@@ -85,6 +100,8 @@ public class SceneManager {
             Object controller = loader.getController();
             if (controller instanceof GameSceneController) {
                 ((GameSceneController) controller).initAndStartGame();
+            } else if (controller instanceof MultiplayerSceneController) {
+                ((MultiplayerSceneController) controller).initAndStartGame();
             }
 
             Scene scene = new Scene(root, W, H);
@@ -99,6 +116,18 @@ public class SceneManager {
         } catch (Exception ex) {
             System.err.println("Error loading FXML: " + fxmlPath);
             ex.printStackTrace();
+        }
+    }
+
+    public static class GameOverData {
+        public final int finalScore;
+        public final long elapsedMillis;
+        public final int level;
+
+        public GameOverData(int finalScore, long elapsedMillis, int level) {
+            this.finalScore = finalScore;
+            this.elapsedMillis = elapsedMillis;
+            this.level = level;
         }
     }
 }
