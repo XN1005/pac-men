@@ -168,6 +168,7 @@ public class MultiplayerSceneController implements Initializable {
                                 g1.update();
                                 g2.update();
                                 g3.update();
+                                g4.update();
 
                                 if (p1.currentCol == g1.getGridX() && p1.currentRow == g1.getGridY()) {
                                     p1.collideGhost(g1);

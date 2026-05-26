@@ -102,8 +102,8 @@ public class TargetingStrategy {
     ) {
         if (blinky == null || blinky.sprite == null) {
             return new int[]{
-                    clamp(playerX, 0, mapCols - 1),
-                    clamp(playerY, 0, mapRows - 1)
+                clamp(playerX, 0, mapCols - 1),
+                clamp(playerY, 0, mapRows - 1)
             };
         }
 
