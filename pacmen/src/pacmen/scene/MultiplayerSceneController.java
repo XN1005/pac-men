@@ -121,8 +121,8 @@ public class MultiplayerSceneController implements Initializable {
         // 3. Players
         final Player[] players = new Player[2];
         try {
-            players[0] = new Player(gameMap, 1.5, 1, 8, 14, activePlayer1Name);
-            players[1] = new Player(gameMap, 1.5, 2, 20, 14, activePlayer2Name);
+            players[0] = new Player(gameMap, 1.5, 1, 9, 17, activePlayer1Name);
+            players[1] = new Player(gameMap, 1.5, 2, 18, 17, activePlayer2Name);
         } catch (Exception e) {
             e.printStackTrace();
         }

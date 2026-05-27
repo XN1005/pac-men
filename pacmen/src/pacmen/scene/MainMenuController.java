@@ -77,7 +77,7 @@ public class MainMenuController implements Initializable {
             return;
         }
 
-        mapChoiceBox.getItems().setAll("Level 1", "Level 2");
+        mapChoiceBox.getItems().setAll("Map 1", "Map 2");
         int selectedLevel = ScoreManager.getInstance().getSelectedMapLevel();
         mapChoiceBox.setValue(selectedLevel == 2 ? "Map 2" : "Map 1");
         updateMapSelectionLabel(mapChoiceBox.getValue());

@@ -196,7 +196,7 @@ public class Player extends Entity implements Collision {
     public void collideGhost(Ghost ghost) {
         this.lastGhostScoreAwarded = 0;
         if (this.state.equals("POWER_UP")) {
-            if (ghost.currentState != Ghost.GhostState.EATEN) {
+            if (ghost.currentState == Ghost.GhostState.FRIGHTENED) {
                 ghost.already_eaten = true;
                 this.lastGhostScoreAwarded = 200 * (int) (Math.pow(2, this.combo));
                 this.score += this.lastGhostScoreAwarded;

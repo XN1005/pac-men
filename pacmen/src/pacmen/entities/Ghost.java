@@ -329,7 +329,7 @@ public class Ghost extends Entity {
     }
 
     public void collidePlayer(Player player) {
-        if (player.state.equals("POWER_UP") && this.currentState != GhostState.EATEN) {
+        if (player.state.equals("POWER_UP") && this.currentState == GhostState.FRIGHTENED) {
             showScore(player.getLastGhostScoreAwarded());
             setCurrentState(GhostState.EATEN);
         }
