@@ -27,8 +27,7 @@ public class Leaderboard implements Initializable {
         leaderboardRows.getChildren().clear();
         statusLabel.setText("LOADING SCORES...");
 
-        // ask ScoreManager for data
-        Map<String, Integer> scores = ScoreManager.getInstance().getGlobalScores();
+        Map<String, ScoreManager.ScoreData> scores = ScoreManager.getInstance().getGlobalScores();
 
         if (scores.isEmpty()) {
             statusLabel.setText("NO SAVED SCORES FOUND");
@@ -36,21 +35,18 @@ public class Leaderboard implements Initializable {
             return;
         }
 
-        // sort the scores
         PriorityQueue<LeaderboardEntry> queue = new PriorityQueue<>();
-        for (Map.Entry<String, Integer> entry : scores.entrySet()) {
-            queue.offer(new LeaderboardEntry(entry.getKey(), entry.getValue()));
+        for (Map.Entry<String, ScoreManager.ScoreData> entry : scores.entrySet()) {
+            queue.offer(new LeaderboardEntry(entry.getKey(), entry.getValue().timestamp, entry.getValue().score));
         }
 
-        // add sorted scores to rank list
         List<LeaderboardEntry> ranked = new ArrayList<>();
         while (!queue.isEmpty()) {
             ranked.add(queue.poll());
         }
 
-        statusLabel.setText("TOP: " + Math.min(ranked.size(), 10) + " ENTRIES");
+        statusLabel.setText("TOP " + Math.min(ranked.size(), 10) + " ENTRIES");
 
-        // display top 10
         int limit = Math.min(ranked.size(), 10);
         for (int i = 0; i < limit; i++) {
             leaderboardRows.getChildren().add(createRow(i + 1, ranked.get(i)));
@@ -65,7 +61,6 @@ public class Leaderboard implements Initializable {
     @FXML
     private void onClearLeaderboard() {
         ScoreManager.getInstance().clearLeaderboard();
-        // refresh UI visually
         loadLeaderboard();
     }
 
@@ -77,25 +72,33 @@ public class Leaderboard implements Initializable {
         row.setPadding(new javafx.geometry.Insets(0, 14, 0, 14));
         row.getStyleClass().add("leaderboard-row");
 
+        // Rank column
         Label rankLabel = new Label("#" + String.format("%02d", rank));
         rankLabel.getStyleClass().add("leaderboard-rank");
-        rankLabel.setMinWidth(56);
-        rankLabel.setPrefWidth(56);
-        rankLabel.setMaxWidth(56);
+        rankLabel.setMinWidth(56); rankLabel.setPrefWidth(56); rankLabel.setMaxWidth(56);
 
+        // 2. Player Name Column
         Label nameLabel = new Label(entry.name());
         nameLabel.getStyleClass().add("leaderboard-name");
         nameLabel.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(nameLabel, Priority.ALWAYS);
 
+        // 3. Timestamp Column
+        String readableTime = entry.timestamp().replace("_", " "); // Changes 2026-05-28_13:15 to 2026-05-28 13:15
+        Label timeLabel = new Label(readableTime);
+        timeLabel.setStyle("-fx-font-family: 'Courier New', monospace; -fx-font-size: 13px; -fx-text-fill: #aaaaaa;");
+        timeLabel.setMinWidth(150);
+        timeLabel.setPrefWidth(150);
+        timeLabel.setMaxWidth(150);
+        timeLabel.setAlignment(Pos.CENTER);
+
+        // Score Column
         Label scoreLabel = new Label(String.format("%06d", entry.score()));
         scoreLabel.getStyleClass().add("leaderboard-score");
-        scoreLabel.setMinWidth(110);
-        scoreLabel.setPrefWidth(110);
-        scoreLabel.setMaxWidth(110);
+        scoreLabel.setMinWidth(110); scoreLabel.setPrefWidth(110); scoreLabel.setMaxWidth(110);
         scoreLabel.setAlignment(Pos.CENTER_RIGHT);
 
-        row.getChildren().addAll(rankLabel, nameLabel, scoreLabel);
+        row.getChildren().addAll(rankLabel, nameLabel, timeLabel, scoreLabel);
         return row;
     }
 
@@ -104,7 +107,6 @@ public class Leaderboard implements Initializable {
         row.setAlignment(Pos.CENTER);
         row.setPrefWidth(620);
         row.setMaxWidth(620);
-        row.setPadding(new javafx.geometry.Insets(0, 14, 0, 14));
         row.getStyleClass().add("leaderboard-row");
 
         Label label = new Label(message);
@@ -113,7 +115,8 @@ public class Leaderboard implements Initializable {
         return row;
     }
 
-    private record LeaderboardEntry(String name, int score) implements Comparable<LeaderboardEntry> {
+    // Record expanded to encapsulate timestamp strings
+    private record LeaderboardEntry(String name, String timestamp, int score) implements Comparable<LeaderboardEntry> {
         @Override
         public int compareTo(LeaderboardEntry other) {
             int scoreCompare = Integer.compare(other.score, this.score);

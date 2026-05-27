@@ -30,6 +30,7 @@
             <HBox alignment="CENTER_LEFT" spacing="14" prefWidth="620" maxWidth="620" style="-fx-padding:0 14 6 14;">
                 <Label styleClass="stat-label" text="RANK" minWidth="56" prefWidth="56" maxWidth="56"/>
                 <Label styleClass="stat-label" text="PLAYER" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Label styleClass="stat-label" text="TIME" minWidth="150" prefWidth="150" maxWidth="150" alignment="CENTER"/>
                 <Label styleClass="stat-label" text="SCORE" minWidth="110" prefWidth="110" maxWidth="110" alignment="CENTER_RIGHT"/>
             </HBox>
             <Region styleClass="neon-divider" maxWidth="620" prefWidth="620"/>

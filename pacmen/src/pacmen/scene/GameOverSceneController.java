@@ -29,77 +29,45 @@ public class GameOverSceneController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         int finalScore = 0;
-        int player1Score = 0;
-        int player2Score = 0;
         long elapsedMillis = 0;
         int finalLevel = 1;
-
-        String p1Name = "Player1";
-        String p2Name = "Player2";
-        String resultStatus = null;
-        boolean isMultiplayer = false;
+        String activePlayerName = "Player1"; // Setup fallback string
 
         SceneManager.GameOverData data = SceneManager.getPendingGameOverData();
         if (data != null) {
             finalScore = data.finalScore;
-            player1Score = data.player1Score;
-            player2Score = data.player2Score;
             elapsedMillis = data.elapsedMillis;
             finalLevel = data.level;
-            resultStatus = data.resultStatus;
-            isMultiplayer = data.isMultiplayer;
-
-            if (data.player1Name != null) p1Name = data.player1Name;
-            if (data.player2Name != null) p2Name = data.player2Name;
-
+            
+            // Extract the real player name from the active gameplay instance!
+            if (data.player1Name != null) {
+                activePlayerName = data.player1Name;
+            }
             SceneManager.clearPendingGameOverData();
         }
 
-        boolean isNewHigh = !isMultiplayer && finalScore > ScoreManager.getInstance().getAbsoluteHighScore();
-        if (!isMultiplayer && isNewHigh) {
-            ScoreManager.getInstance().submitScore(p1Name, finalScore);
-        }
+        int storedHighScore = ScoreManager.getInstance().getAbsoluteHighScore();
+        boolean isNewHigh = finalScore > storedHighScore;
+        if (isNewHigh) storedHighScore = finalScore;
 
-        if (isMultiplayer) {
-            ScoreManager.getInstance().submitScore(p1Name, player1Score);
-            ScoreManager.getInstance().submitScore(p2Name, player2Score);
-        }
+        // Submit the actual active player's name instead of the placeholder stub!
+        ScoreManager.getInstance().submitScore(activePlayerName, finalScore);
 
-        populateStats(player1Score, player2Score, isNewHigh, finalLevel, elapsedMillis, isMultiplayer, resultStatus, p1Name, p2Name);
+        populateStats(finalScore, storedHighScore, isNewHigh, finalLevel, elapsedMillis);
         animateEntrance(isNewHigh);
     }
 
-    private void populateStats(int player1Score, int player2Score, boolean isNewHigh, int level, long elapsedMillis, boolean isMultiplayer, String resultStatus, String p1Name, String p2Name) {
-        if (isMultiplayer) {
-            finalScoreTitleLabel.setText("PLAYER 1 SCORE");
-            highScoreTitleLabel.setText("PLAYER 2 SCORE");
-            finalScoreLabel.setText(String.format("%06d", player1Score));
-            highScoreLabel.setText(String.format("%06d", player2Score));
-
-            String winnerName = player1Score >= player2Score ? p1Name : p2Name;
-            subtitleLabel.setText((winnerName + " WINS!").toUpperCase());
-            newHighScoreLabel.setVisible(false);
-            newHighScoreLabel.setManaged(false);
-        } else {
-            finalScoreTitleLabel.setText("FINAL SCORE");
-            highScoreTitleLabel.setText("HIGH SCORE");
-            finalScoreLabel.setText(String.format("%06d", player1Score));
-            highScoreLabel.setText(String.format("%06d", Math.max(player1Score, ScoreManager.getInstance().getAbsoluteHighScore())));
-
-            if ("WIN".equals(resultStatus)) {
-                subtitleLabel.setText("LEVEL CLEAR, YOU WIN!");
-            } else {
-                subtitleLabel.setText("BETTER LUCK NEXT TIME");
-            }
-
-            if (isNewHigh) {
-                newHighScoreLabel.setVisible(true);
-                newHighScoreLabel.setManaged(true);
-            }
-        }
+    private void populateStats(int score, int highScore, boolean isNewHigh, int level, long elapsedMillis) {
+        finalScoreLabel.setText(String.format("%06d", score));
+        highScoreLabel.setText(String.format("%06d", highScore));
 
         levelLabel.setText(String.valueOf(level));
         timeLabel.setText(TimerDisplay.formatElapsedTime(elapsedMillis));
+
+        if (isNewHigh) {
+            newHighScoreLabel.setVisible(true);
+            newHighScoreLabel.setManaged(true);
+        }
     }
 
     private void animateEntrance(boolean isNewHigh) {

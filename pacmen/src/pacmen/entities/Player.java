@@ -69,7 +69,6 @@ public class Player extends Entity implements Collision {
             String fullPathFolder = baseCharacterFolder + "-" + dirFolders[d];
             for (int f = 0; f < 3; f++) {
                 File file = new File("resources/assets/" + fullPathFolder + "/" + (f + 1) + ".png");
-                
                 if (!file.exists()) {
                     System.err.println("CRITICAL ANIMATION ERROR: Missing asset file at: " + file.getAbsolutePath());
                 }
