@@ -57,7 +57,7 @@ public class Ghost extends Entity {
         this.sprite.setCenterY(this.y);
         this.targetX = getGridX();
         this.targetY = getGridY();
-        startChasePhase(CHASE_DURATION_SECONDS);
+        startScatterPhase();
     }
 
     @Override
@@ -81,7 +81,7 @@ public class Ghost extends Entity {
             this.y = (getGridY() * 20) + 10;
 
             if (currentState == GhostState.EATEN && isAtHouseTile()) {
-                startChasePhase(CHASE_DURATION_SECONDS - 4.0);
+                startScatterPhase();
             }
 
             updateTarget();

@@ -60,6 +60,11 @@ public class GameOverSceneController implements Initializable {
             ScoreManager.getInstance().submitScore(p1Name, finalScore);
         }
 
+        if (isMultiplayer) {
+            ScoreManager.getInstance().submitScore(p1Name, player1Score);
+            ScoreManager.getInstance().submitScore(p2Name, player2Score);
+        }
+
         populateStats(player1Score, player2Score, isNewHigh, finalLevel, elapsedMillis, isMultiplayer, resultStatus, p1Name, p2Name);
         animateEntrance(isNewHigh);
     }

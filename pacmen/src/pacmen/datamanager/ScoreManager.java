@@ -1,5 +1,8 @@
 package pacmen.datamanager;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -15,8 +18,16 @@ public class ScoreManager {
     private int player2Score = 0;
     private int selectedMapLevel = 1;
 
-    private static final String DATA_FILE = "resources/data/data.txt";
+    private static final Path DATA_FILE_PATH = determineDataFilePath();
     private Map<String, Integer> globalScores;
+
+    private static Path determineDataFilePath() {
+        Path projectDataPath = Paths.get("resources", "data", "data.txt");
+        if (Files.exists(projectDataPath) || Files.exists(projectDataPath.getParent())) {
+            return projectDataPath;
+        }
+        return Paths.get("data", "data.txt");
+    }
 
     private ScoreManager() {
         globalScores = new HashMap<>();
@@ -76,7 +87,7 @@ public class ScoreManager {
     // leaderboard data storage process
     public void loadGlobalScores() {
         globalScores.clear();
-        List<String> lines = SaveSystem.loadLines(DATA_FILE);
+        List<String> lines = SaveSystem.loadLines(DATA_FILE_PATH.toString());
 
         for (String line : lines) {
             String trimmed = line.trim();
@@ -105,12 +116,12 @@ public class ScoreManager {
         for (Map.Entry<String, Integer> entry : globalScores.entrySet()) {
             output.add(entry.getKey() + " " + entry.getValue());
         }
-        SaveSystem.saveLines(DATA_FILE, output);
+        SaveSystem.saveLines(DATA_FILE_PATH.toString(), output);
     }
 
     public void clearLeaderboard() {
         globalScores.clear();
-        SaveSystem.saveLines(DATA_FILE, new ArrayList<>());
+        SaveSystem.saveLines(DATA_FILE_PATH.toString(), new ArrayList<>());
     }
 
     public int getAbsoluteHighScore() {
