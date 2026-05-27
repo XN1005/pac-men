@@ -1,10 +1,13 @@
 package pacmen.entities;
+
 import pacmen.ghostai.*;
 
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
+import java.io.File;
 import pacmen.map.GameMap;
 
 public class Ghost extends Entity {
@@ -16,18 +19,21 @@ public class Ghost extends Entity {
     private static final int SPAWN_MAX_Y = 15;
     private static final int HOUSE_CENTER_X = 14;
     private static final int HOUSE_CENTER_Y = 14;
-    private static final double CHASE_DURATION_SECONDS = 5.5; // -4s start = 1.5s
+    private static final double CHASE_DURATION_SECONDS = 5.5; 
     private static final double SCATTER_DURATION_SECONDS = 5.0;
     private static final double CHASE_DURATION_AFTER_SCATTER_SECONDS = 8.0;
 
-    private final double baseSpeed;     // default speed, set later
-    public  GhostState currentState;    // Public for player accessibility
-    private Color baseColor;
+    // Graphics
+    public ImageView sprite;
+    private Image normalImage;
+    private Image scaredImage;
+
+    private final double baseSpeed;     
+    public  GhostState currentState;    
     private int targetX, targetY;
     private final GameMap map;
     private final String ghostName;
     private Player targetPlayer;
-    public Circle sprite;
     private Label scoreDisplay;
     private Pane attachedPane;
     private boolean scoreDisplayActive = false;
@@ -35,9 +41,9 @@ public class Ghost extends Entity {
     private long phaseStartNanos;
     private double chaseDurationSeconds = CHASE_DURATION_AFTER_SCATTER_SECONDS;
 
-    // Acts as switchers
     public boolean already_eaten;
     public boolean already_frightened;
+
     public Ghost(GameMap map, double x, double y, double speed, Color color) {
         this(map, x, y, speed, color, null, "blinky");
         this.already_eaten = false;
@@ -48,15 +54,30 @@ public class Ghost extends Entity {
         super(snapToGrid(x), snapToGrid(y), speed);
         this.baseSpeed = speed;
         this.map = map;
-        this.baseColor = color;
         this.targetPlayer = targetPlayer;
         this.ghostName = ghostName == null || ghostName.isBlank() ? "blinky" : ghostName;
-        this.direction = 1; // Default starting direction (Right)
-        this.sprite = new Circle(15, color);
-        this.sprite.setCenterX(this.x);
-        this.sprite.setCenterY(this.y);
+        this.direction = 1; 
+
+        // Load images
+        File nFile = new File("resources/assets/ghosts/" + this.ghostName + ".png");
+        if (!nFile.exists()) {
+            System.err.println("CRITICAL: Ghost image missing at " + nFile.getAbsolutePath());
+        }
+        this.normalImage = new Image(nFile.toURI().toString());
+        
+        File sFile = new File("resources/assets/ghosts/frightened_ghost.png");
+        if (!sFile.exists()) {
+            System.err.println("CRITICAL: Frightened ghost image missing at " + sFile.getAbsolutePath());
+        }
+        this.scaredImage = new Image(sFile.toURI().toString());
+
+        this.sprite = new ImageView(normalImage);
+        this.sprite.setFitWidth(30);
+        this.sprite.setFitHeight(30);
+
         this.targetX = getGridX();
         this.targetY = getGridY();
+        updateVisuals();
         startScatterPhase();
     }
 
@@ -74,9 +95,6 @@ public class Ghost extends Entity {
         updatePhaseTimer();
 
         if (isAtCenterOfTile()) {
-
-            // --- THE SNAP ---
-            // Wipe out any mathematical offset so they perfectly align with the grid
             this.x = (getGridX() * 20) + 10;
             this.y = (getGridY() * 20) + 10;
 
@@ -105,9 +123,7 @@ public class Ghost extends Entity {
     }
 
     public void showScore(int earnedScore) {
-        if (earnedScore <= 0 || scoreDisplay == null) {
-            return;
-        }
+        if (earnedScore <= 0 || scoreDisplay == null) return;
         this.scoreDisplayActive = true;
         this.scoreDisplayEndNanos = System.nanoTime() + 1_000_000_000L;
         this.scoreDisplay.setText("+" + earnedScore);
@@ -118,24 +134,18 @@ public class Ghost extends Entity {
 
     private void endScoreDisplay() {
         this.scoreDisplayActive = false;
-        if (scoreDisplay != null) {
-            scoreDisplay.setVisible(false);
-        }
+        if (scoreDisplay != null) scoreDisplay.setVisible(false);
         this.sprite.setVisible(true);
     }
 
     private void updateScoreDisplay() {
-        if (scoreDisplay == null) {
-            return;
-        }
+        if (scoreDisplay == null) return;
         scoreDisplay.setLayoutX(x - 24);
         scoreDisplay.setLayoutY(y - 18);
     }
 
     private void applyGhostBehaviorState() {
-        if (currentState == GhostState.EATEN) {
-            return;
-        }
+        if (currentState == GhostState.EATEN) return;
 
         if (targetPlayer != null && "POWER_UP".equals(targetPlayer.state)) {
             if (currentState != GhostState.FRIGHTENED && !already_frightened) {
@@ -152,9 +162,7 @@ public class Ghost extends Entity {
     }
 
     private void updatePhaseTimer() {
-        if (currentState == GhostState.FRIGHTENED || currentState == GhostState.EATEN) {
-            return;
-        }
+        if (currentState == GhostState.FRIGHTENED || currentState == GhostState.EATEN) return;
 
         double elapsedSeconds = (System.nanoTime() - phaseStartNanos) / 1_000_000_000.0;
 
@@ -169,29 +177,21 @@ public class Ghost extends Entity {
     }
 
     private void startChasePhase(double durationSeconds) {
-        System.out.println("Chase Phase");
         this.currentState = GhostState.CHASE;
         this.chaseDurationSeconds = durationSeconds;
         this.phaseStartNanos = System.nanoTime();
     }
 
     private void startScatterPhase() {
-        System.out.println("Scatter Phase");
         this.currentState = GhostState.SCATTER;
         this.phaseStartNanos = System.nanoTime();
     }
 
     private boolean isAtCenterOfTile() {
-        // 1. Calculate the exact, absolute center pixel of the ghost's current grid coordinate
         double exactCenterX = (getGridX() * 20) + 10;
         double exactCenterY = (getGridY() * 20) + 10;
-
-        // 2. Find out exactly how far the ghost is from that center pixel
         double distX = Math.abs(this.x - exactCenterX);
         double distY = Math.abs(this.y - exactCenterY);
-
-        // 3. Check if the ghost is close enough to snap. 
-        // Use strictly less than (<) to prevent vibrating/double-triggering!
         return distX < speed && distY < speed;
     }
 
@@ -199,15 +199,12 @@ public class Ghost extends Entity {
         int[] target;
         switch (currentState) {
             case SCATTER:
+            case FRIGHTENED:
                 target = TargetingStrategy.getScatterTarget(ghostName, map.getCols(), map.getRows());
                 speed = this.baseSpeed;
                 break;
             case CHASE:
                 target = getChaseTarget();
-                speed = this.baseSpeed;
-                break;
-            case FRIGHTENED:
-                target = TargetingStrategy.getScatterTarget(ghostName, map.getCols(), map.getRows());
                 speed = this.baseSpeed;
                 break;
             case EATEN:
@@ -219,7 +216,6 @@ public class Ghost extends Entity {
                 speed = this.baseSpeed;
                 break;
         }
-
         this.targetX = target[0];
         this.targetY = target[1];
     }
@@ -228,31 +224,12 @@ public class Ghost extends Entity {
         if (targetPlayer == null || targetPlayer.sprite == null) {
             return TargetingStrategy.getScatterTarget(ghostName, map.getCols(), map.getRows());
         }
-
-        return TargetingStrategy.getTargetTile(
-                map,
-                this,
-                targetPlayer,
-                null,
-                ghostName,
-                GhostState.CHASE,
-                targetPlayer.direction
-        );
+        return TargetingStrategy.getTargetTile(map, this, targetPlayer, null, ghostName, GhostState.CHASE, targetPlayer.direction);
     }
 
     private void chooseNextDirection() {
-        // Allow reverse if EATEN -OR- if they are inside the ghost house trying to leave!
         boolean allowReverse = currentState == GhostState.EATEN || isInsideSpawnArea(getGridX(), getGridY());
-        this.direction = BFSPathfinder.getNextDirection(
-                map,
-                this,
-                getGridX(),
-                getGridY(),
-                this.targetX,
-                this.targetY,
-                direction,
-                allowReverse
-        );
+        this.direction = BFSPathfinder.getNextDirection(map, this, getGridX(), getGridY(), this.targetX, this.targetY, direction, allowReverse);
     }
 
     private void move() {
@@ -263,66 +240,56 @@ public class Ghost extends Entity {
     }
 
     private void updateVisuals() {
-        this.sprite.setCenterX(x);
-        this.sprite.setCenterY(y);
+        // set position (Offset by -15 to center the 30x30 image on the (x,y) pixel)
+        this.sprite.setX(x - 15);
+        this.sprite.setY(y - 15);
 
+        // state graphics
         if (this.currentState == GhostState.FRIGHTENED) {
-            this.sprite.setFill(Color.BLUE);
+            this.sprite.setImage(scaredImage);
+            this.sprite.setScaleX(1.0);
+            this.sprite.setScaleY(1.0);
+            this.sprite.setOpacity(1.0);
         } else if (this.currentState == GhostState.EATEN) {
-            this.sprite.setRadius(5);
+            this.sprite.setImage(normalImage);
+            // Shrink and make semi-transparent to simulate floating eyes/remnants
+            this.sprite.setScaleX(0.5); 
+            this.sprite.setScaleY(0.5);
+            this.sprite.setOpacity(0.4);
         } else {
-            this.sprite.setFill(baseColor);
-            this.sprite.setRadius(15);
+            this.sprite.setImage(normalImage);
+            this.sprite.setScaleX(1.0);
+            this.sprite.setScaleY(1.0);
+            this.sprite.setOpacity(1.0);
         }
     }
 
-    public int getGridX() {
-        return TargetingStrategy.pixelToGrid(x);
-    }
-
-    public int getGridY() {
-        return TargetingStrategy.pixelToGrid(y);
-    }
-
+    public int getGridX() { return TargetingStrategy.pixelToGrid(x); }
+    public int getGridY() { return TargetingStrategy.pixelToGrid(y); }
+    
     private static double snapToGrid(double pixel) {
         int grid = TargetingStrategy.pixelToGrid(pixel);
         return TargetingStrategy.gridToPixel(grid);
     }
 
-    public double getBaseSpeed() {
-        return this.baseSpeed;
-    }
-
-    public boolean isAtHouseTile() {
-        return getGridX() == HOUSE_CENTER_X && getGridY() == HOUSE_CENTER_Y;
-    }
-
+    public double getBaseSpeed() { return this.baseSpeed; }
+    public boolean isAtHouseTile() { return getGridX() == HOUSE_CENTER_X && getGridY() == HOUSE_CENTER_Y; }
+    
     public boolean isInsideSpawnArea(int gridX, int gridY) {
-        return gridX >= SPAWN_MIN_X
-                && gridX <= SPAWN_MAX_X
-                && gridY >= SPAWN_MIN_Y
-                && gridY <= SPAWN_MAX_Y;
+        return gridX >= SPAWN_MIN_X && gridX <= SPAWN_MAX_X && gridY >= SPAWN_MIN_Y && gridY <= SPAWN_MAX_Y;
     }
 
     public boolean canOccupyTile(int gridX, int gridY) {
-        if (currentState == GhostState.EATEN) {
-            return true;
-        }
+        if (currentState == GhostState.EATEN) return true;
         return !isInsideSpawnArea(gridX, gridY);
     }
 
-    public void setSpeed(double speed) {
-        this.speed = speed;
-    }
-
-    public void setTargetPlayer(Player player) {
-        this.targetPlayer = player;
-    }
+    public void setSpeed(double speed) { this.speed = speed; }
+    public void setTargetPlayer(Player player) { this.targetPlayer = player; }
 
     public void setCurrentState(GhostState state) {
         this.currentState = state;
         this.phaseStartNanos = System.nanoTime();
-
         if (state == GhostState.CHASE) {
             this.chaseDurationSeconds = CHASE_DURATION_AFTER_SCATTER_SECONDS;
         }
@@ -333,9 +300,7 @@ public class Ghost extends Entity {
             showScore(player.getLastGhostScoreAwarded());
             setCurrentState(GhostState.EATEN);
         }
-        else return;
     }
 
-    @Override
-    public void render() {}
+    @Override public void render() {}
 }

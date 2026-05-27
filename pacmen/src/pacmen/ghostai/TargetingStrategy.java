@@ -40,8 +40,9 @@ public class TargetingStrategy {
             return getScatterTarget(name, mapCols, mapRows);
         }
 
-        int playerX = pixelToGrid(player.sprite.getCenterX());
-        int playerY = pixelToGrid(player.sprite.getCenterY());
+        // Fixed:ImageView corner offsets converted back to center coordinate points
+        int playerX = pixelToGrid(player.sprite.getX() + 15);
+        int playerY = pixelToGrid(player.sprite.getY() + 15);
 
         playerDirection = BFSPathfinder.fixDirection(playerDirection);
 
@@ -112,8 +113,9 @@ public class TargetingStrategy {
         int twoAheadX = playerX + delta[0] * 2;
         int twoAheadY = playerY + delta[1] * 2;
 
-        int blinkyX = pixelToGrid(blinky.sprite.getCenterX());
-        int blinkyY = pixelToGrid(blinky.sprite.getCenterY());
+        // Fixed: Extracted center point from Blinky's ImageView sprite properties
+        int blinkyX = pixelToGrid(blinky.sprite.getX() + 15);
+        int blinkyY = pixelToGrid(blinky.sprite.getY() + 15);
 
         int vectorX = twoAheadX - blinkyX;
         int vectorY = twoAheadY - blinkyY;
@@ -183,32 +185,32 @@ public class TargetingStrategy {
         if (ghost == null || ghost.sprite == null) {
             return 0;
         }
-
-        return pixelToGrid(ghost.sprite.getCenterX());
+        // Fixed: Adjusted logic to account for ImageView bounds
+        return pixelToGrid(ghost.sprite.getX() + 15);
     }
 
     public static int getGhostGridY(Ghost ghost) {
         if (ghost == null || ghost.sprite == null) {
             return 0;
         }
-
-        return pixelToGrid(ghost.sprite.getCenterY());
+        // Fixed: Adjusted logic to account for ImageView bounds
+        return pixelToGrid(ghost.sprite.getY() + 15);
     }
 
     public static int getPlayerGridX(Player player) {
         if (player == null || player.sprite == null) {
             return 0;
         }
-
-        return pixelToGrid(player.sprite.getCenterX());
+        // Fixed: Adjusted logic to account for ImageView bounds
+        return pixelToGrid(player.sprite.getX() + 15);
     }
 
     public static int getPlayerGridY(Player player) {
         if (player == null || player.sprite == null) {
             return 0;
         }
-
-        return pixelToGrid(player.sprite.getCenterY());
+        // Fixed: Adjusted logic to account for ImageView bounds
+        return pixelToGrid(player.sprite.getY() + 15);
     }
 
     public static int pixelToGrid(double pixelValue) {
