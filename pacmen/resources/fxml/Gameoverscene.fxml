@@ -43,7 +43,7 @@
 
             <!-- Final Score row -->
             <HBox alignment="CENTER_LEFT" spacing="0">
-                <Label styleClass="stat-label" text="FINAL SCORE" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="finalScoreTitleLabel" styleClass="stat-label" text="FINAL SCORE" HBox.hgrow="ALWAYS"/>
                 <Label fx:id="finalScoreLabel" styleClass="stat-value" text="0"/>
             </HBox>
 
@@ -51,7 +51,7 @@
 
             <!-- High Score row -->
             <HBox alignment="CENTER_LEFT" spacing="0">
-                <Label styleClass="stat-label" text="HIGH SCORE" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="highScoreTitleLabel" styleClass="stat-label" text="HIGH SCORE" HBox.hgrow="ALWAYS"/>
                 <Label fx:id="highScoreLabel" styleClass="stat-value" text="0"/>
             </HBox>
 

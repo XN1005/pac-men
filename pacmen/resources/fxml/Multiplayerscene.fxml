@@ -20,12 +20,13 @@
 
         <!-- TOP HUD BAR -->
         <HBox fx:id="hudBar" styleClass="panel-box" alignment="CENTER_LEFT" spacing="0"
-              prefHeight="56" minHeight="56">
+              prefHeight="75" minHeight="65">
             <padding><Insets top="0" bottom="0" left="20" right="20"/></padding>
 
-            <!-- Score -->
+            <!-- Player 1 Score -->
             <VBox alignment="CENTER_LEFT" spacing="3" HBox.hgrow="ALWAYS">
-                <Label styleClass="hud-label" text="SCORE"/>
+                <Label styleClass="hud-label" text="PLAYER 1"/>
+                <Label fx:id="p1NameLabel" styleClass="hud-label" text="PLAYER 1"/>
                 <Label fx:id="scoreLabel" styleClass="hud-value" text="000000"/>
             </VBox>
 
@@ -41,16 +42,17 @@
                 <Label fx:id="timerLabel" styleClass="hud-value" text="00:00"/>
             </VBox>
 
-            <!-- Lives -->
+            <!-- Current Lead -->
             <VBox alignment="CENTER" spacing="3" HBox.hgrow="ALWAYS">
-                <Label styleClass="hud-label" text="LIVES"/>
-                <HBox fx:id="livesBox" alignment="CENTER" spacing="4"/>
+                <Label styleClass="hud-label" text="CURRENT LEAD"/>
+                <Label fx:id="currentLeadLabel" styleClass="hud-value" text="+000000"/>
             </VBox>
 
-            <!-- High Score -->
+            <!-- Player 2 Score -->
             <VBox alignment="CENTER_RIGHT" spacing="3" HBox.hgrow="ALWAYS">
-                <Label styleClass="hud-label" text="HIGH SCORE"/>
-                <Label fx:id="highScoreLabel" styleClass="hud-value" text="000000"/>
+                <Label styleClass="hud-label" text="PLAYER 2"/>
+                <Label fx:id="p2NameLabel" styleClass="hud-label" text="PLAYER 2"/>
+                <Label fx:id="p2ScoreLabel" styleClass="hud-value" text="000000"/>
             </VBox>
 
             <!-- Pause Button -->
@@ -63,6 +65,9 @@
 
         <!-- GAME CANVAS AREA -->
         <StackPane fx:id="canvasWrapper" VBox.vgrow="ALWAYS">
+            <VBox.margin>
+                <Insets top="20.0" bottom="20.0"/>
+            </VBox.margin>
             <Canvas fx:id="gameCanvas" width="900" height="578"/>
         </StackPane>
 
@@ -86,7 +91,7 @@
                mouseTransparent="true">
         <Label fx:id="countdownLabel"
                style="-fx-font-family:'Press Start 2P',monospace;
-                      -fx-font-size:96px; -fx-text-fill:#FFD700;
+                      -fx-font-size:100px; -fx-text-fill:#FFD700;
                       -fx-effect:dropshadow(gaussian,rgba(255,215,0,0.95),40,0.7,0,0);"/>
     </StackPane>
 

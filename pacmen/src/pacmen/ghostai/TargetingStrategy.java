@@ -166,7 +166,6 @@ public class TargetingStrategy {
         if (name.contains("clyde") || name.contains("orange")) {
             return new int[]{0, mapRows - 1};
         }
-
         return new int[]{0, 0};
     }
 

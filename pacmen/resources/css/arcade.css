@@ -28,7 +28,7 @@
 /* ── Section titles ─────────────────────────────────────────── */
 .scene-title {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 40px;
+    -fx-font-size: 44px;
     -fx-text-fill: #FFD700;
     -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.85), 24, 0.6, 0, 0)
                 dropshadow(gaussian, rgba(255,255,255,0.4), 6, 0.3, 0, 0);
@@ -36,7 +36,7 @@
 
 .scene-subtitle {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 9px;
+    -fx-font-size: 13px;
     -fx-text-fill: #00FFFF;
     -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.6), 10, 0.4, 0, 0);
     -fx-letter-spacing: 3px;
@@ -45,14 +45,14 @@
 /* ── Buttons ────────────────────────────────────────────────── */
 .btn-primary {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 13px;
+    -fx-font-size: 17px;
     -fx-background-color: #FFD700;
     -fx-text-fill: #050810;
     -fx-border-color: #ffffff;
     -fx-border-width: 2px;
     -fx-background-radius: 0;
     -fx-border-radius: 0;
-    -fx-pref-height: 54px;
+    -fx-pref-height: 58px;
     -fx-cursor: hand;
     -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.75), 18, 0.5, 0, 0);
 }
@@ -65,14 +65,14 @@
 
 .btn-cyan {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 11px;
+    -fx-font-size: 15px;
     -fx-background-color: transparent;
     -fx-text-fill: #00FFFF;
     -fx-border-color: #00FFFF;
     -fx-border-width: 2px;
     -fx-background-radius: 0;
     -fx-border-radius: 0;
-    -fx-pref-height: 50px;
+    -fx-pref-height: 54px;
     -fx-cursor: hand;
     -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.45), 10, 0.35, 0, 0);
 }
@@ -85,14 +85,14 @@
 
 .btn-pink {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 11px;
+    -fx-font-size: 15px;
     -fx-background-color: transparent;
     -fx-text-fill: #FF6EC7;
     -fx-border-color: #FF6EC7;
     -fx-border-width: 2px;
     -fx-background-radius: 0;
     -fx-border-radius: 0;
-    -fx-pref-height: 50px;
+    -fx-pref-height: 54px;
     -fx-cursor: hand;
     -fx-effect: dropshadow(gaussian, rgba(255,110,199,0.45), 10, 0.35, 0, 0);
 }
@@ -105,14 +105,14 @@
 
 .btn-ghost {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 9px;
+    -fx-font-size: 13px;
     -fx-background-color: transparent;
     -fx-text-fill: rgba(255,255,255,0.4);
     -fx-border-color: rgba(255,255,255,0.2);
     -fx-border-width: 2px;
     -fx-background-radius: 0;
     -fx-border-radius: 0;
-    -fx-pref-height: 44px;
+    -fx-pref-height: 48px;
     -fx-cursor: hand;
 }
 .btn-ghost:hover {
@@ -123,14 +123,14 @@
 
 .btn-danger {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 11px;
+    -fx-font-size: 15px;
     -fx-background-color: transparent;
     -fx-text-fill: #FF3B3B;
     -fx-border-color: #FF3B3B;
     -fx-border-width: 2px;
     -fx-background-radius: 0;
     -fx-border-radius: 0;
-    -fx-pref-height: 50px;
+    -fx-pref-height: 54px;
     -fx-cursor: hand;
     -fx-effect: dropshadow(gaussian, rgba(255,59,59,0.4), 10, 0.3, 0, 0);
 }
@@ -144,13 +144,13 @@
 /* ── Stat / info labels ─────────────────────────────────────── */
 .stat-label {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 11px;
+    -fx-font-size: 15px;
     -fx-text-fill: rgba(0,255,255,0.7);
 }
 
 .stat-value {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 14px;
+    -fx-font-size: 18px;
     -fx-text-fill: #FFD700;
     -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.5), 8, 0.3, 0, 0);
 }
@@ -173,23 +173,23 @@
 /* ── Footer ─────────────────────────────────────────────────── */
 .footer-label {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 7px;
+    -fx-font-size: 11px;
     -fx-text-fill: rgba(0,255,255,0.3);
 }
 
 /* ── HUD labels (used inside GameScene) ─────────────────────── */
 .hud-label {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 10px;
+    -fx-font-size: 14px;
     -fx-text-fill: rgba(255,255,255,0.6);
 }
 .hud-value {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 13px;
+    -fx-font-size: 17px;
     -fx-text-fill: #FFD700;
 }
 .hud-lives {
-    -fx-font-size: 18px;
+    -fx-font-size: 22px;
     -fx-text-fill: #FFD700;
 }
 
@@ -202,12 +202,12 @@
 }
 .player-row-name {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 10px;
+    -fx-font-size: 14px;
     -fx-text-fill: #00FFFF;
 }
 .player-row-status {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 8px;
+    -fx-font-size: 12px;
     -fx-text-fill: rgba(255,215,0,0.7);
 }
 .status-dot-ready    { -fx-text-fill: #00FF88; -fx-font-size:16px; }
@@ -222,17 +222,17 @@
 }
 .leaderboard-rank {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 11px;
+    -fx-font-size: 15px;
     -fx-text-fill: #FFD700;
     -fx-min-width: 56;
 }
 .leaderboard-name {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 10px;
+    -fx-font-size: 14px;
     -fx-text-fill: #00FFFF;
 }
 .leaderboard-score {
     -fx-font-family: 'Press Start 2P', 'Courier New', monospace;
-    -fx-font-size: 11px;
+    -fx-font-size: 15px;
     -fx-text-fill: #FFD700;
 }

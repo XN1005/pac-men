@@ -4,6 +4,7 @@ import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -12,8 +13,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
-import pacmen.util.SceneManager;
 import pacmen.datamanager.ScoreManager;
+import pacmen.util.SceneManager;
 
 import java.net.URL;
 import java.util.List;
@@ -27,16 +28,17 @@ public class MainMenuController implements Initializable {
 
     @FXML private StackPane rootPane;
     @FXML private StackPane splashOverlay;
-    @FXML private Label     titleLabel;
-    @FXML private Label     playerCountLabel;
-    @FXML private HBox      dotRowTop;
-    @FXML private HBox      dotRowBottom;
-    @FXML private VBox      menuButtons;
-    @FXML private Label     ghostBlinky, ghostPinky, ghostInky, ghostClyde;
-    
-    // Injected input components for custom player identification strings
+    @FXML private Label titleLabel;
+    @FXML private Label playerCountLabel;
+    @FXML private HBox dotRowTop;
+    @FXML private HBox dotRowBottom;
+    @FXML private VBox menuButtons;
+    @FXML private Label ghostBlinky, ghostPinky, ghostInky, ghostClyde;
+
     @FXML private TextField player1Input;
     @FXML private TextField player2Input;
+    @FXML private ChoiceBox<String> mapChoiceBox;
+    @FXML private Label mapSelectionLabel;
 
     private static final String[] GHOST_COLORS = {
         "-fx-text-fill:rgba(255, 59, 59, 0.9);",
@@ -51,10 +53,10 @@ public class MainMenuController implements Initializable {
         styleGhosts();
         startGhostFloatAnimations();
         startTitlePulse();
+        setupMapSelection();
         splashOverlay.setOnMouseClicked(e -> dismissSplash());
     }
 
-    // ── Dot rows ──────────────────────────────────────────────────
     private void buildDotRows() {
         for (HBox row : List.of(dotRowTop, dotRowBottom)) {
             for (int i = 0; i < 18; i++) {
@@ -70,7 +72,30 @@ public class MainMenuController implements Initializable {
         for (int i = 0; i < g.size(); i++) g.get(i).setStyle(GHOST_COLORS[i]);
     }
 
-    // ── Splash dismiss ────────────────────────────────────────────
+    private void setupMapSelection() {
+        if (mapChoiceBox == null) {
+            return;
+        }
+
+        mapChoiceBox.getItems().setAll("Level 1", "Level 2");
+        int selectedLevel = ScoreManager.getInstance().getSelectedMapLevel();
+        mapChoiceBox.setValue(selectedLevel == 2 ? "Map 2" : "Map 1");
+        updateMapSelectionLabel(mapChoiceBox.getValue());
+
+        mapChoiceBox.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue != null) {
+                ScoreManager.getInstance().setSelectedMapLevel("Map 2".equals(newValue) ? 2 : 1);
+                updateMapSelectionLabel(newValue);
+            }
+        });
+    }
+
+    private void updateMapSelectionLabel(String selectedMap) {
+        if (mapSelectionLabel != null) {
+            mapSelectionLabel.setText("Selected Map: " + selectedMap);
+        }
+    }
+
     private void dismissSplash() {
         FadeTransition fade = new FadeTransition(Duration.millis(500), splashOverlay);
         fade.setToValue(0);
@@ -94,7 +119,7 @@ public class MainMenuController implements Initializable {
                 new KeyFrame(Duration.millis(delay)),
                 new KeyFrame(Duration.millis(delay + 300),
                     new KeyValue(btn.opacityProperty(), 1.0, Interpolator.EASE_OUT),
-                    new KeyValue(btn.translateYProperty(), 0,  Interpolator.EASE_OUT))
+                    new KeyValue(btn.translateYProperty(), 0, Interpolator.EASE_OUT))
             ).play();
         }
         FadeTransition fade = new FadeTransition(Duration.millis(100), menuButtons);
@@ -102,11 +127,10 @@ public class MainMenuController implements Initializable {
         fade.play();
     }
 
-    // ── Animations ────────────────────────────────────────────────
     private void startGhostFloatAnimations() {
         List<Label> ghosts = List.of(ghostBlinky, ghostPinky, ghostInky, ghostClyde);
-        double[] amps   = {14, 12, 16, 10};
-        double[] delays = { 0, 400, 700, 1100};
+        double[] amps = {14, 12, 16, 10};
+        double[] delays = {0, 400, 700, 1100};
         for (int i = 0; i < ghosts.size(); i++) {
             Label g = ghosts.get(i);
             TranslateTransition tt = new TranslateTransition(Duration.millis(2800 + i * 200), g);
@@ -122,37 +146,60 @@ public class MainMenuController implements Initializable {
 
     private void startTitlePulse() {
         ScaleTransition st = new ScaleTransition(Duration.millis(1600), titleLabel);
-        st.setFromX(1.0); st.setFromY(1.0);
-        st.setToX(1.03);  st.setToY(1.03);
+        st.setFromX(1.0);
+        st.setFromY(1.0);
+        st.setToX(1.03);
+        st.setToY(1.03);
         st.setAutoReverse(true);
         st.setCycleCount(Animation.INDEFINITE);
         st.setInterpolator(Interpolator.EASE_BOTH);
         st.play();
     }
 
-    // ── Helper to process and cache active registration titles ───
+    private String sanitizeName(TextField field, String fallback) {
+        if (field == null) {
+            return fallback;
+        }
+
+        String raw = field.getText();
+        if (raw == null) {
+            return fallback;
+        }
+
+        String cleaned = raw.replaceAll("\\s+", "");
+        if (cleaned.isBlank()) {
+            return fallback;
+        }
+
+        field.setText(cleaned);
+        return cleaned;
+    }
+
     private void savePlayerNames() {
-        String p1 = (player1Input != null && !player1Input.getText().isBlank()) ? player1Input.getText() : "Player1";
-        String p2 = (player2Input != null && !player2Input.getText().isBlank()) ? player2Input.getText() : "Player2";
+        String p1 = sanitizeName(player1Input, "Player1");
+        String p2 = sanitizeName(player2Input, "Player2");
         ScoreManager.getInstance().setPlayerNames(p1, p2);
     }
 
-    // ── Navigation handlers ───────────────────────────────────────
-    @FXML 
-    private void onPlay() { 
+    @FXML
+    private void onPlay() {
         savePlayerNames();
-        SceneManager.goTo(SceneManager.GAME); 
+        SceneManager.goTo(SceneManager.GAME);
     }
-    
-    @FXML 
-    private void onHostGame() { 
-        savePlayerNames();
-        SceneManager.goTo(SceneManager.MULTIPLAYER); 
-    }
-    
-    @FXML private void onLeaderboard() { SceneManager.goTo(SceneManager.LEADERBOARD); }
 
-    @FXML private void onQuit() {
+    @FXML
+    private void onHostGame() {
+        savePlayerNames();
+        SceneManager.goTo(SceneManager.MULTIPLAYER);
+    }
+
+    @FXML
+    private void onLeaderboard() {
+        SceneManager.goTo(SceneManager.LEADERBOARD);
+    }
+
+    @FXML
+    private void onQuit() {
         FadeTransition fade = new FadeTransition(Duration.millis(400), rootPane);
         fade.setToValue(0);
         fade.setOnFinished(e -> Platform.exit());

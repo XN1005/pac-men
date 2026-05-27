@@ -20,12 +20,12 @@ public class WallCell implements Cell {
         this.center = new Rectangle(8, 8, Color.BLUE);
         this.center.setX(px - 4);
         this.center.setY(py - 4);
-        this.center.setStroke(Color.DARKBLUE);
+        this.center.setStroke(Color.BLUE);
 
-        this.leftConnection = createConnectionRect(px - 15, py - 3, 10, 6);
-        this.rightConnection = createConnectionRect(px + 5, py - 3, 10, 6);
-        this.upConnection = createConnectionRect(px - 3, py - 15, 6, 10);
-        this.downConnection = createConnectionRect(px - 3, py + 5, 6, 10);
+        this.leftConnection = createConnectionRect(px - 15, py - 4, 10, 8);
+        this.rightConnection = createConnectionRect(px + 5, py - 4, 10, 8);
+        this.upConnection = createConnectionRect(px - 4, py - 15, 8, 10);
+        this.downConnection = createConnectionRect(px - 4, py + 5, 8, 10);
 
         setConnections(false, false, false, false);
         this.sprite.getChildren().addAll(leftConnection, rightConnection, upConnection, downConnection, center);
@@ -35,7 +35,7 @@ public class WallCell implements Cell {
         Rectangle rect = new Rectangle(width, height, Color.BLUE);
         rect.setX(x);
         rect.setY(y);
-        rect.setStroke(Color.DARKBLUE);
+        rect.setStroke(Color.BLUE);
         rect.setVisible(false);
         return rect;
     }

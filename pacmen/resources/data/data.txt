@@ -1,2 +1,8 @@
+<<<<<<< HEAD
 KungfuboysTD 35
 triduc 1035
+=======
+XN 3880
+XN2 40
+Player1 55470
+>>>>>>> 5f07e78317e289c9ada1dd9805d7ad7d39bf584f

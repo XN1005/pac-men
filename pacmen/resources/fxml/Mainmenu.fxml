@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
@@ -13,7 +14,6 @@
 
     <Pane fx:id="bgPane" maxHeight="Infinity" maxWidth="Infinity" styleClass="bg-pane" />
 
-    <!-- Ghost decorations -->
     <Pane mouseTransparent="true">
         <Label fx:id="ghostBlinky" layoutX="60" layoutY="80" styleClass="ghost-deco" text="ᗣ" />
         <Label fx:id="ghostPinky" layoutX="790" layoutY="100" styleClass="ghost-deco" text="ᗣ" />
@@ -21,10 +21,9 @@
         <Label fx:id="ghostClyde" layoutX="820" layoutY="480" styleClass="ghost-deco" text="ᗣ" />
     </Pane>
 
-    <!-- Splash overlay -->
     <StackPane fx:id="splashOverlay" styleClass="splash-overlay" />
 
-    <VBox alignment="CENTER" spacing="0" styleClass="content-vbox">
+    <VBox alignment="CENTER" spacing="6" styleClass="content-vbox">
 
         <VBox alignment="CENTER" spacing="6" styleClass="logo-section">
             <HBox fx:id="dotRowTop" alignment="CENTER" spacing="14" styleClass="dot-row" />
@@ -33,22 +32,41 @@
             <HBox fx:id="dotRowBottom" alignment="CENTER" spacing="14" styleClass="dot-row" />
         </VBox>
 
-        <Region prefHeight="36" />
+        <Region prefHeight="18" />
 
-        <VBox fx:id="menuButtons" alignment="CENTER" spacing="16" styleClass="menu-vbox">
-            <HBox alignment="CENTER" spacing="10" maxWidth="340">
-                <TextField fx:id="player1Input" promptText="Player 1 Name" styleClass="text-input" HBox.hgrow="ALWAYS"/>
-                <TextField fx:id="player2Input" promptText="Player 2 Name" styleClass="text-input" HBox.hgrow="ALWAYS"/>
-            </HBox>
-            <Region prefHeight="8" />
+        <VBox fx:id="menuButtons" alignment="CENTER" spacing="18" styleClass="menu-vbox">
+            <VBox alignment="CENTER" spacing="10" maxWidth="720" styleClass="config-panel">
+                <Label styleClass="config-title" text="GAME SETUP" />
+                <Label styleClass="config-hint" text="Names are automatically cleaned to remove spaces." />
 
-            <Button maxWidth="340" onAction="#onPlay" styleClass="menu-btn, btn-play" text="▶  SINGLEPLAYER" />
-            <Button maxWidth="340" onAction="#onHostGame" styleClass="menu-btn, btn-play" text="▶  MULTIPLAYER" />
-            <Button maxWidth="340" onAction="#onLeaderboard" styleClass="menu-btn" text="★  LEADERBOARD" />
-            <Button maxWidth="340" onAction="#onQuit" styleClass="menu-btn, btn-quit" text="✕  QUIT" />
+                <HBox alignment="CENTER" spacing="14" maxWidth="680">
+                    <TextField fx:id="player1Input" promptText="Player 1 Name" styleClass="text-input" HBox.hgrow="ALWAYS" />
+                    <TextField fx:id="player2Input" promptText="Player 2 Name" styleClass="text-input" HBox.hgrow="ALWAYS" />
+                </HBox>
+
+                <HBox alignment="CENTER" spacing="18" maxWidth="680">
+                    <VBox alignment="CENTER_LEFT" spacing="8" HBox.hgrow="ALWAYS" styleClass="map-settings-box">
+                        <Label fx:id="mapSelectionLabel" styleClass="config-label" text="Selected Map: Map 1" />
+                        <ChoiceBox fx:id="mapChoiceBox" prefWidth="220" styleClass="map-choice-box" />
+                    </VBox>
+
+                    <VBox alignment="CENTER_LEFT" spacing="6" maxWidth="420" styleClass="instruction-box">
+                        <Label styleClass="instruction-title" text="HOW TO PLAY" />
+                        <Label styleClass="instruction-line" text="Player 1: WASD Controls" />
+                        <Label styleClass="instruction-line" text="Player 2: Arrow Keys" />
+                        <Label styleClass="instruction-line" text="Collect all pellets to win." />
+                        <Label styleClass="instruction-line" text="Last one standing wins. If both survive, the one with higher score wins." />
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <Button maxWidth="340" onAction="#onPlay" styleClass="btn-primary" text="▶  SINGLEPLAYER" />
+            <Button maxWidth="340" onAction="#onHostGame" styleClass="btn-primary" text="▶  MULTIPLAYER" />
+            <Button maxWidth="340" onAction="#onLeaderboard" styleClass="btn-cyan" text="★  LEADERBOARD" />
+            <Button maxWidth="340" onAction="#onQuit" styleClass="btn-danger" text="✕  QUIT" />
         </VBox>
 
-        <Region prefHeight="24" />
+        <Region prefHeight="12" />
 
         <HBox alignment="CENTER" spacing="32" styleClass="footer-hbox">
             <Label styleClass="footer-label" text="© 2025 PACMEN DEVS" />

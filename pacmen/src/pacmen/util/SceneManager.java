@@ -63,15 +63,20 @@ public class SceneManager {
 
     // Overloaded backup option if code elsewhere doesn't provide names yet
     public static void goToGameOver(int finalScore) {
-        goToGameOver(finalScore, 0, 1, "Player1", "Player2");
+        goToGameOver(finalScore, 0, 1, "Player1", "Player2", null);
     }
 
     /**
      * Primary navigate to Game Over shortcut.
      * Passes metrics and custom player names down to the controller lifecycle.
      */
-    public static void goToGameOver(int finalScore, long elapsedMillis, int level, String p1Name, String p2Name) {
-        pendingGameOverData = new GameOverData(finalScore, elapsedMillis, level, p1Name, p2Name);
+    public static void goToGameOver(int finalScore, long elapsedMillis, int level, String p1Name, String p2Name, String resultStatus) {
+        pendingGameOverData = new GameOverData(finalScore, elapsedMillis, level, p1Name, p2Name, resultStatus);
+        goTo(GAME_OVER);
+    }
+
+    public static void goToGameOver(int player1Score, int player2Score, long elapsedMillis, int level, String p1Name, String p2Name) {
+        pendingGameOverData = new GameOverData(player1Score, player2Score, elapsedMillis, level, p1Name, p2Name);
         goTo(GAME_OVER);
     }
 
@@ -123,17 +128,33 @@ public class SceneManager {
     // Updated data bundle class to support string transmission
     public static class GameOverData {
         public final int finalScore;
+        public final int player1Score;
+        public final int player2Score;
         public final long elapsedMillis;
         public final int level;
         public final String player1Name;
         public final String player2Name;
+        public final String resultStatus;
+        public final boolean isMultiplayer;
 
-        public GameOverData(int finalScore, long elapsedMillis, int level, String player1Name, String player2Name) {
+        public GameOverData(int finalScore, long elapsedMillis, int level, String player1Name, String player2Name, String resultStatus) {
+            this(finalScore, finalScore, 0, elapsedMillis, level, player1Name, player2Name, resultStatus, false);
+        }
+
+        public GameOverData(int player1Score, int player2Score, long elapsedMillis, int level, String player1Name, String player2Name) {
+            this(player1Score, player1Score, player2Score, elapsedMillis, level, player1Name, player2Name, null, true);
+        }
+
+        private GameOverData(int finalScore, int player1Score, int player2Score, long elapsedMillis, int level, String player1Name, String player2Name, String resultStatus, boolean isMultiplayer) {
             this.finalScore = finalScore;
+            this.player1Score = player1Score;
+            this.player2Score = player2Score;
             this.elapsedMillis = elapsedMillis;
             this.level = level;
             this.player1Name = player1Name;
             this.player2Name = player2Name;
+            this.resultStatus = resultStatus;
+            this.isMultiplayer = isMultiplayer;
         }
     }
 }

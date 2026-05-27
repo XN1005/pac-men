@@ -14,6 +14,7 @@ public class Player extends Entity implements Collision {
     private String name;
     public String state;
     public int combo = 0;
+    private int lastGhostScoreAwarded = 0;
     private GameMap map;
     public int currentCol;
     public int currentRow;
@@ -85,7 +86,7 @@ public class Player extends Entity implements Collision {
             long currentTime = System.nanoTime();
             double elapsedSeconds = (currentTime - this.powerUpTime) / 1_000_000_000.0;
             
-            if (elapsedSeconds >= 10.0) {
+            if (elapsedSeconds >= 7.0) {
                 this.state = "ACTIVE";
                 this.combo = 0; // Reset kill combo after power-up expires
             }
@@ -188,12 +189,18 @@ public class Player extends Entity implements Collision {
     @Override public void collideCherry() { this.score += 5; }
     @Override public void collideGhost() { if (!this.state.equals("POWER_UP")) this.state = "DEAD"; }
 
+    public int getLastGhostScoreAwarded() {
+        return this.lastGhostScoreAwarded;
+    }
+
     public void collideGhost(Ghost ghost) {
+        this.lastGhostScoreAwarded = 0;
         if (this.state.equals("POWER_UP")) {
             if (ghost.currentState != Ghost.GhostState.EATEN) {
                 ghost.already_eaten = true;
-                this.score += 200 * (int) (Math.pow(2, this.combo));    
-                this.combo++;
+                this.lastGhostScoreAwarded = 200 * (int) (Math.pow(2, this.combo));
+                this.score += this.lastGhostScoreAwarded;
+                if (this.combo < 3) this.combo++; // MAX COMBO = 3
             }
         } else {
             this.state = "DEAD";
