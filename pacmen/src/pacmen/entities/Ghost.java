@@ -19,7 +19,6 @@ public class Ghost extends Entity {
     private static final int SPAWN_MAX_Y = 15;
     private static final int HOUSE_CENTER_X = 14;
     private static final int HOUSE_CENTER_Y = 14;
-    private static final double CHASE_DURATION_SECONDS = 5.5; 
     private static final double SCATTER_DURATION_SECONDS = 5.0;
     private static final double CHASE_DURATION_AFTER_SCATTER_SECONDS = 8.0;
 
