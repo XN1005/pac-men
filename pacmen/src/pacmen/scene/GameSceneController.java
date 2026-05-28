@@ -44,8 +44,13 @@ public class GameSceneController implements Initializable {
     @FXML private HBox      livesBox;
     @FXML private Label     p1NameLabel;     
 
+    private static final long FIXED_FRAME_NANOS = 1_000_000_000L / 60;
+
     private long elapsedTimerMillis = 0;
     private long lastTimerUpdateNanos = 0;
+    private long accumulatorNanos = 0;
+    private long lastFrameNanos = 0;
+    private long ghostScorePauseUntilNanos = 0;
 
     private String     state           = "ACTIVE"; 
     private GameMap    gameMap         = null;
@@ -96,7 +101,7 @@ public class GameSceneController implements Initializable {
 
         final Player[] players = new Player[2];
         try {
-            players[0] = new Player(gameMap, 1.55, 1, 14, 17, activePlayer1Name);
+            players[0] = new Player(gameMap, 2.00, 1, 14, 17, activePlayer1Name);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -104,9 +109,10 @@ public class GameSceneController implements Initializable {
         
         final Player p1 = players[0];
 
-        Ghost g1 = new Ghost(gameMap, 250, 280, 1.5, Color.RED, p1, "blinky");
-        Ghost g2 = new Ghost(gameMap, 290, 280, 1.5, Color.ORANGE, p1, "clyde");
-        Ghost g3 = new Ghost(gameMap, 330, 280, 1.5, Color.PINK, p1, "pinky");
+        Ghost g1 = new Ghost(gameMap, 250, 300, 2.0, Color.RED, p1, "blinky");
+        Ghost g2 = new Ghost(gameMap, 230, 260, 2.0, Color.ORANGE, p1, "clyde");
+        Ghost g3 = new Ghost(gameMap, 310, 300, 2.0, Color.PINK, p1, "pinky");
+        Ghost g4 = new Ghost(gameMap, 330, 260, 2.0, Color.AQUA, p1, "inky");
         g1.attachToPane(gamePane);
         g2.attachToPane(gamePane);
         g3.attachToPane(gamePane);
@@ -124,7 +130,7 @@ public class GameSceneController implements Initializable {
         }
 
         gamePane.getChildren().addAll(p1.sprite);
-        gamePane.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite);
+        gamePane.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite, g4.sprite);
         Platform.runLater(this::fitMapToView);
 
         startCountdown(() -> {
@@ -135,30 +141,62 @@ public class GameSceneController implements Initializable {
             gameLoop = new AnimationTimer() {
                 @Override
                 public void handle(long now) {
-                    long deltaMillis = (now - lastTimerUpdateNanos) / 1_000_000;
-                    if (deltaMillis > 0) {
-                        lastTimerUpdateNanos = now;
-                        
+                    if (lastFrameNanos == 0) {
+                        lastFrameNanos = now;
+                    }
+
+                    long frameNanos = now - lastFrameNanos;
+                    lastFrameNanos = now;
+                    accumulatorNanos += frameNanos;
+
+                    while (accumulatorNanos >= FIXED_FRAME_NANOS) {
+                        if (ghostScorePauseUntilNanos > now) {
+                            g1.update();
+                            g2.update();
+                            g3.update();
+                            g4.update();
+                            updateHUD(p1.score, storedHighScore, currentLevel);
+                            accumulatorNanos -= FIXED_FRAME_NANOS;
+                            continue;
+                        }
+
                         if (state.equals("ACTIVE")) {
-                            elapsedTimerMillis += deltaMillis;
+                            elapsedTimerMillis += FIXED_FRAME_NANOS / 1_000_000;
                             updateTimerDisplay();
 
                             p1.update();
                             g1.update();
                             g2.update();
                             g3.update();
+                            g4.update();
 
                             if (Math.pow(Math.pow(p1.currentCol - g1.getGridX(), 2) + Math.pow(p1.currentRow - g1.getGridY(), 2), 0.5) <= 1) {
-                                p1.collideGhost(g1);
-                                g1.collidePlayer(p1);
+                                boolean consumed = p1.collideGhost(g1);
+                                if (consumed) {
+                                    g1.collidePlayer(p1);
+                                    ghostScorePauseUntilNanos = now + 500_000_000L;
+                                }
                             }
                             if (Math.pow(Math.pow(p1.currentCol - g2.getGridX(), 2) + Math.pow(p1.currentRow - g2.getGridY(), 2), 0.5) <= 1) {
-                                p1.collideGhost(g2);
-                                g2.collidePlayer(p1);
+                                boolean consumed = p1.collideGhost(g2);
+                                if (consumed) {
+                                    g2.collidePlayer(p1);
+                                    ghostScorePauseUntilNanos = now + 500_000_000L;
+                                }
                             }
                             if (Math.pow(Math.pow(p1.currentCol - g3.getGridX(), 2) + Math.pow(p1.currentRow - g3.getGridY(), 2), 0.5) <= 1) {
-                                p1.collideGhost(g3);
-                                g3.collidePlayer(p1);
+                                boolean consumed = p1.collideGhost(g3);
+                                if (consumed) {
+                                    g3.collidePlayer(p1);
+                                    ghostScorePauseUntilNanos = now + 500_000_000L;
+                                }
+                            }
+                            if (Math.pow(Math.pow(p1.currentCol - g4.getGridX(), 2) + Math.pow(p1.currentRow - g4.getGridY(), 2), 0.5) <= 1) {
+                                boolean consumed = p1.collideGhost(g4);
+                                if (consumed) {
+                                    g4.collidePlayer(p1);
+                                    ghostScorePauseUntilNanos = now + 500_000_000L;
+                                }
                             }
 
                             updateHUD(p1.score, storedHighScore, currentLevel);
@@ -180,6 +218,8 @@ public class GameSceneController implements Initializable {
                                 }
                             }
                         }
+
+                        accumulatorNanos -= FIXED_FRAME_NANOS;
                     }
                 }
             };

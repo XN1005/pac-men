@@ -46,8 +46,13 @@ public class MultiplayerSceneController implements Initializable {
     @FXML private Label     p2ScoreLabel;
     @FXML private Label     currentLeadLabel;
 
+    private static final long FIXED_FRAME_NANOS = 1_000_000_000L / 60;
+
     private long elapsedTimerMillis = 0;
     private long lastTimerUpdateNanos = 0;
+    private long accumulatorNanos = 0;
+    private long lastFrameNanos = 0;
+    private long ghostScorePauseUntilNanos = 0;
 
     // ── Game state ────────────────────────────────────────────────
     private String     state           = "ACTIVE";    
@@ -120,8 +125,8 @@ public class MultiplayerSceneController implements Initializable {
         // 3. Players
         final Player[] players = new Player[2];
         try {
-            players[0] = new Player(gameMap, 1.5, 1, 9, 17, activePlayer1Name);
-            players[1] = new Player(gameMap, 1.5, 2, 18, 17, activePlayer2Name);
+            players[0] = new Player(gameMap, 3.0, 1, 6, 14, activePlayer1Name);
+            players[1] = new Player(gameMap, 3.0, 2, 21, 14, activePlayer2Name);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -132,10 +137,10 @@ public class MultiplayerSceneController implements Initializable {
         final Player p2 = players[1];
 
         // 4. Ghosts
-        Ghost g1 = new Ghost(gameMap, 250, 300, 1.5, Color.RED, p1, "blinky");
-        Ghost g2 = new Ghost(gameMap, 230, 260, 1.5, Color.ORANGE, p1, "clyde");
-        Ghost g3 = new Ghost(gameMap, 310, 300, 1.5, Color.PINK, p1, "pinky");
-        Ghost g4 = new Ghost(gameMap, 330, 260, 1.5, Color.AQUA, p2, "inky");
+        Ghost g1 = new Ghost(gameMap, 250, 300, 3.0, Color.RED, p1, "blinky");
+        Ghost g2 = new Ghost(gameMap, 230, 260, 3.0, Color.ORANGE, p1, "clyde");
+        Ghost g3 = new Ghost(gameMap, 310, 300, 3.0, Color.PINK, p2, "pinky");
+        Ghost g4 = new Ghost(gameMap, 330, 260, 3.0, Color.AQUA, p2, "inky");
         g1.attachToPane(gamePane);
         g2.attachToPane(gamePane);
         g3.attachToPane(gamePane);
@@ -168,12 +173,29 @@ public class MultiplayerSceneController implements Initializable {
             gameLoop = new AnimationTimer() {
                 @Override
                 public void handle(long now) {
-                    long deltaMillis = (now - lastTimerUpdateNanos) / 1_000_000;
-                    if (deltaMillis > 0) {
-                        lastTimerUpdateNanos = now;
+                    if (lastFrameNanos == 0) {
+                        lastFrameNanos = now;
+                    }
+
+                    long frameNanos = now - lastFrameNanos;
+                    lastFrameNanos = now;
+                    accumulatorNanos += frameNanos;
+
+                    while (accumulatorNanos >= FIXED_FRAME_NANOS) {
+                        updateGhostTargets(p1, p2, g1, g2, g3, g4);
+
+                        if (ghostScorePauseUntilNanos > now) {
+                            g1.update();
+                            g2.update();
+                            g3.update();
+                            g4.update();
+                            updateHUD(p1.score, p2.score, currentLevel);
+                            accumulatorNanos -= FIXED_FRAME_NANOS;
+                            continue;
+                        }
 
                         if (state.equals("ACTIVE")) {
-                            elapsedTimerMillis += deltaMillis;
+                            elapsedTimerMillis += FIXED_FRAME_NANOS / 1_000_000;
                             updateTimerDisplay();
 
                             p1.update();
@@ -183,39 +205,62 @@ public class MultiplayerSceneController implements Initializable {
                             g3.update();
                             g4.update();
 
-                            // Collision matrix boundary evaluations
                             if (Math.pow(Math.pow(p1.currentCol - g1.getGridX(), 2) + Math.pow(p1.currentRow - g1.getGridY(), 2), 0.5) <= 1) {
-                                p1.collideGhost(g1);
-                                g1.collidePlayer(p1);
+                                boolean consumed = p1.collideGhost(g1);
+                                if (consumed) {
+                                    g1.collidePlayer(p1);
+                                    ghostScorePauseUntilNanos = now + 500_000_000L;
+                                }
                             }
                             if (Math.pow(Math.pow(p1.currentCol - g2.getGridX(), 2) + Math.pow(p1.currentRow - g2.getGridY(), 2), 0.5) <= 1) {
-                                p1.collideGhost(g2);
-                                g2.collidePlayer(p1);
+                                boolean consumed = p1.collideGhost(g2);
+                                if (consumed) {
+                                    g2.collidePlayer(p1);
+                                    ghostScorePauseUntilNanos = now + 500_000_000L;
+                                }
                             }
                             if (Math.pow(Math.pow(p1.currentCol - g3.getGridX(), 2) + Math.pow(p1.currentRow - g3.getGridY(), 2), 0.5) <= 1) {
-                                p1.collideGhost(g3);
-                                g3.collidePlayer(p1);
+                                boolean consumed = p1.collideGhost(g3);
+                                if (consumed) {
+                                    g3.collidePlayer(p1);
+                                    ghostScorePauseUntilNanos = now + 500_000_000L;
+                                }
                             }
                             if (Math.pow(Math.pow(p1.currentCol - g4.getGridX(), 2) + Math.pow(p1.currentRow - g4.getGridY(), 2), 0.5) <= 1) {
-                                p1.collideGhost(g4);
-                                g4.collidePlayer(p1);
+                                boolean consumed = p1.collideGhost(g4);
+                                if (consumed) {
+                                    g4.collidePlayer(p1);
+                                    ghostScorePauseUntilNanos = now + 500_000_000L;
+                                }
                             }
 
                             if (Math.pow(Math.pow(p2.currentCol - g1.getGridX(), 2) + Math.pow(p2.currentRow - g1.getGridY(), 2), 0.5) <= 1) {
-                                p2.collideGhost(g1);
-                                g1.collidePlayer(p2);
+                                boolean consumed = p2.collideGhost(g1);
+                                if (consumed) {
+                                    g1.collidePlayer(p2);
+                                    ghostScorePauseUntilNanos = now + 500_000_000L;
+                                }
                             }
                             if (Math.pow(Math.pow(p2.currentCol - g2.getGridX(), 2) + Math.pow(p2.currentRow - g2.getGridY(), 2), 0.5) <= 1) {
-                                p2.collideGhost(g2);
-                                g2.collidePlayer(p2);
+                                boolean consumed = p2.collideGhost(g2);
+                                if (consumed) {
+                                    g2.collidePlayer(p2);
+                                    ghostScorePauseUntilNanos = now + 500_000_000L;
+                                }
                             }
                             if (Math.pow(Math.pow(p2.currentCol - g3.getGridX(), 2) + Math.pow(p2.currentRow - g3.getGridY(), 2), 0.5) <= 1) {
-                                p2.collideGhost(g3);
-                                g3.collidePlayer(p2);
+                                boolean consumed = p2.collideGhost(g3);
+                                if (consumed) {
+                                    g3.collidePlayer(p2);
+                                    ghostScorePauseUntilNanos = now + 500_000_000L;
+                                }
                             }
                             if (Math.pow(Math.pow(p2.currentCol - g4.getGridX(), 2) + Math.pow(p2.currentRow - g4.getGridY(), 2), 0.5) <= 1) {
-                                p2.collideGhost(g4);
-                                g4.collidePlayer(p2);
+                                boolean consumed = p2.collideGhost(g4);
+                                if (consumed) {
+                                    g4.collidePlayer(p2);
+                                    ghostScorePauseUntilNanos = now + 500_000_000L;
+                                }
                             }
 
                             updateHUD(p1.score, p2.score, currentLevel);
@@ -236,6 +281,8 @@ public class MultiplayerSceneController implements Initializable {
                                 }
                             }
                         }
+
+                        accumulatorNanos -= FIXED_FRAME_NANOS;
                     }
                 }
             };
@@ -331,6 +378,28 @@ public class MultiplayerSceneController implements Initializable {
         if (gameLoop != null) {
             lastTimerUpdateNanos = System.nanoTime();
             gameLoop.start();
+        }
+    }
+
+    private void updateGhostTargets(Player p1, Player p2, Ghost g1, Ghost g2, Ghost g3, Ghost g4) {
+        if (p1 == null || p2 == null) {
+            return;
+        }
+
+        if ("DEAD".equals(p1.state)) {
+            g1.setTargetPlayer(p2);
+            g2.setTargetPlayer(p2);
+        } else {
+            g1.setTargetPlayer(p1);
+            g2.setTargetPlayer(p1);
+        }
+
+        if ("DEAD".equals(p2.state)) {
+            g3.setTargetPlayer(p1);
+            g4.setTargetPlayer(p1);
+        } else {
+            g3.setTargetPlayer(p2);
+            g4.setTargetPlayer(p2);
         }
     }
 

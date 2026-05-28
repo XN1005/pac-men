@@ -225,19 +225,24 @@ public class Player extends Entity implements Collision {
         return this.lastGhostScoreAwarded;
     }
 
-    public void collideGhost(Ghost ghost) {
+    public boolean collideGhost(Ghost ghost) {
         this.lastGhostScoreAwarded = 0;
         if (this.state.equals("POWER_UP")) {
             if (ghost.currentState == Ghost.GhostState.FRIGHTENED) {
                 ghost.already_eaten = true;
                 this.lastGhostScoreAwarded = 200 * (int) (Math.pow(2, this.combo));
                 this.score += this.lastGhostScoreAwarded;
-                if (this.combo < 3) this.combo++; 
+                if (this.combo < 2) this.combo++; // MAX COMBO: 0 -> 2
+                return true;
             }
-        } else {
+            else if(ghost.currentState == Ghost.GhostState.EATEN) return false;
+
             this.state = "DEAD";
-            this.sprite.setVisible(false);
+            return false;
         }
+
+        this.state = "DEAD";
+        return false;
     }
     
     public void collidePlayer() {}

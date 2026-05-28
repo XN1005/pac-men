@@ -125,7 +125,7 @@ public class Ghost extends Entity {
     public void showScore(int earnedScore) {
         if (earnedScore <= 0 || scoreDisplay == null) return;
         this.scoreDisplayActive = true;
-        this.scoreDisplayEndNanos = System.nanoTime() + 1_000_000_000L;
+        this.scoreDisplayEndNanos = System.nanoTime() + 500_000_000L;
         this.scoreDisplay.setText("+" + earnedScore);
         this.scoreDisplay.setVisible(true);
         this.sprite.setVisible(false);
