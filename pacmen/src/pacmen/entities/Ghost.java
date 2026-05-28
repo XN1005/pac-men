@@ -11,7 +11,7 @@ import java.io.File;
 import pacmen.map.GameMap;
 
 public class Ghost extends Entity {
-    // States
+    // STATES AND PROPERTIES 
     public enum GhostState { SCATTER, CHASE, FRIGHTENED, EATEN }
     private static final int SPAWN_MIN_X = 9;
     private static final int SPAWN_MAX_X = 18;
@@ -19,10 +19,11 @@ public class Ghost extends Entity {
     private static final int SPAWN_MAX_Y = 15;
     private static final int HOUSE_CENTER_X = 14;
     private static final int HOUSE_CENTER_Y = 14;
-    private static final double SCATTER_DURATION_SECONDS = 5.0;
+    // SCATTER CHASE CYCLE
+    private static final double SCATTER_DURATION_SECONDS = 5.0; 
     private static final double CHASE_DURATION_AFTER_SCATTER_SECONDS = 8.0;
 
-    // Graphics
+    // GRAPHICS
     public ImageView sprite;
     private Image normalImage;
     private Image scaredImage;
@@ -57,7 +58,7 @@ public class Ghost extends Entity {
         this.ghostName = ghostName == null || ghostName.isBlank() ? "blinky" : ghostName;
         this.direction = 1; 
 
-        // Load images
+        // LOAD IMAGES
         File nFile = new File("resources/assets/ghosts/" + this.ghostName + ".png");
         if (!nFile.exists()) {
             System.err.println("CRITICAL: Ghost image missing at " + nFile.getAbsolutePath());
@@ -239,11 +240,11 @@ public class Ghost extends Entity {
     }
 
     private void updateVisuals() {
-        // set position (Offset by -15 to center the 30x30 image on the (x,y) pixel)
+        // SET POSITION TO CENTER OF CELL
         this.sprite.setX(x - 15);
         this.sprite.setY(y - 15);
 
-        // state graphics
+        // GRAPHICS OF EACH STATE
         if (this.currentState == GhostState.FRIGHTENED) {
             this.sprite.setImage(scaredImage);
             this.sprite.setScaleX(1.0);
@@ -251,7 +252,6 @@ public class Ghost extends Entity {
             this.sprite.setOpacity(1.0);
         } else if (this.currentState == GhostState.EATEN) {
             this.sprite.setImage(normalImage);
-            // Shrink and make semi-transparent to simulate floating eyes/remnants
             this.sprite.setScaleX(0.5); 
             this.sprite.setScaleY(0.5);
             this.sprite.setOpacity(0.4);
@@ -294,11 +294,34 @@ public class Ghost extends Entity {
         }
     }
 
+    public void resetSpawn(double x, double y, Player targetPlayer) {
+        this.x = x;
+        this.y = y;
+        this.direction = 1;
+        this.speed = this.baseSpeed;
+        this.targetPlayer = targetPlayer;
+        this.already_eaten = false;
+        this.already_frightened = false;
+        this.scoreDisplayActive = false;
+        if (this.scoreDisplay != null) {
+            this.scoreDisplay.setVisible(false);
+        }
+        startScatterPhase();
+        this.targetX = getGridX();
+        this.targetY = getGridY();
+        this.sprite.setVisible(true);
+        this.sprite.setImage(normalImage);
+        this.sprite.setOpacity(1.0);
+        this.sprite.setScaleX(1.0);
+        this.sprite.setScaleY(1.0);
+        updateVisuals();
+    }
+
     public void collidePlayer(Player player) {
         if (player.state.equals("POWER_UP") && this.currentState == GhostState.FRIGHTENED) {
             already_eaten = true;
-            showScore(player.getLastGhostScoreAwarded());
             setCurrentState(GhostState.EATEN);
+            showScore(player.getLastGhostScoreAwarded());
         }
     }
 

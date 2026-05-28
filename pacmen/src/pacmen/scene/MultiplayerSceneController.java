@@ -30,7 +30,7 @@ import java.util.Set;
 
 public class MultiplayerSceneController implements Initializable {
     
-    // ── FXML injections ───────────────────────────────────────────
+    // ── FXML ───────────────────────────────────────────
     @FXML private StackPane rootPane;
     @FXML private Canvas    gameCanvas;      
     @FXML private StackPane canvasWrapper;   
@@ -46,7 +46,7 @@ public class MultiplayerSceneController implements Initializable {
     @FXML private Label     p2ScoreLabel;
     @FXML private Label     currentLeadLabel;
 
-    private static final long FIXED_FRAME_NANOS = 1_000_000_000L / 60;
+    private static final long FIXED_FRAME_NANOS = 1_000_000_000L / 60; // 60 fps
 
     private long elapsedTimerMillis = 0;
     private long lastTimerUpdateNanos = 0;
@@ -62,15 +62,15 @@ public class MultiplayerSceneController implements Initializable {
     private int        currentLives    = 1;
     private int        currentLevel    = 1;
     private static int storedHighScore = 0;
+    private boolean    p1Fading        = false;
+    private boolean    p2Fading        = false;
     
-    // Track localized player session strings
+    // Default player Names
     private String activePlayer1Name = "Player1";
     private String activePlayer2Name = "Player2";
 
     // ── Input ─────────────────────────────────────────────────────
     private final Set<KeyCode> keysPressed = new HashSet<>();
-
-    // ── Game objects (filled in initAndStartGame) ─────────────────
     private AnimationTimer gameLoop;
     private Pane           gamePane;
 
@@ -147,8 +147,8 @@ public class MultiplayerSceneController implements Initializable {
         g4.attachToPane(gamePane);
 
         // 5. Map cells
-        for (int x = 0; x < 28; x++) {
-            for (int y = 0; y < 36; y++) {
+        for (int x = 0; x < gameMap.getCols(); x++) {
+            for (int y = 0; y < gameMap.getRows(); y++) {
                 Cell cell = gameMap.getCell(x, y);
                 if (cell instanceof PelletCell)
                     gamePane.getChildren().add(((PelletCell) cell).getPellet().sprite);
@@ -159,12 +159,12 @@ public class MultiplayerSceneController implements Initializable {
             }
         }
 
-        // 7. Render components
+        // 6. Render components
         gamePane.getChildren().addAll(p1.sprite, p2.sprite);
         gamePane.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite, g4.sprite);
         Platform.runLater(this::fitMapToView);
 
-        // 8. Countdown loop
+        // 7. Countdown loop
         startCountdown(() -> {
             elapsedTimerMillis = 0;
             lastTimerUpdateNanos = System.nanoTime();
@@ -189,6 +189,8 @@ public class MultiplayerSceneController implements Initializable {
                             // g2.update();
                             // g3.update();
                             // g4.update();
+                            p1.pausePowerUpTimer(FIXED_FRAME_NANOS);
+                            p2.pausePowerUpTimer(FIXED_FRAME_NANOS);
                             updateHUD(p1.score, p2.score, currentLevel);
                             accumulatorNanos -= FIXED_FRAME_NANOS;
                             continue;
@@ -200,6 +202,19 @@ public class MultiplayerSceneController implements Initializable {
 
                             p1.update();
                             p2.update();
+
+                            // Sync POWER_UP across players in multiplayer: when one player
+                            // enters POWER_UP, grant the other player the same state
+                            // and align the timer so both expire together.
+                            if ("POWER_UP".equals(p1.state) && !"POWER_UP".equals(p2.state)) {
+                                p2.state = "POWER_UP";
+                                p2.powerUpTime = p1.powerUpTime;
+                            }
+                            if ("POWER_UP".equals(p2.state) && !"POWER_UP".equals(p1.state)) {
+                                p1.state = "POWER_UP";
+                                p1.powerUpTime = p2.powerUpTime;
+                            }
+
                             g1.update();
                             g2.update();
                             g3.update();
@@ -263,12 +278,21 @@ public class MultiplayerSceneController implements Initializable {
                                 }
                             }
 
+                            if (p1.state.equals("DEAD") && !p1Fading) {
+                                p1Fading = true;
+                                fadeOutPlayerSprite(p1, null);
+                            }
+                            if (p2.state.equals("DEAD") && !p2Fading) {
+                                p2Fading = true;
+                                fadeOutPlayerSprite(p2, null);
+                            }
+
                             updateHUD(p1.score, p2.score, currentLevel);
 
                             if (p1.state.equals("DEAD") && p2.state.equals("DEAD") && !state.equals("LOSE")) {
                                 state = "LOSE";
                                 stop();
-                                handleLose(p1);
+                                handleLose(p1, p2);
                                 return;
                             }
 
@@ -326,6 +350,7 @@ public class MultiplayerSceneController implements Initializable {
     public void startCountdown(Runnable onGo) {
         countdownOverlay.setVisible(true);
         countdownOverlay.setManaged(true);
+        countdownOverlay.setOpacity(1.0);
         String[] steps = {"3", "2", "1", "GO!"};
 
         Timeline tl = new Timeline();
@@ -416,14 +441,35 @@ public class MultiplayerSceneController implements Initializable {
         return true;
     }
 
-    private void handleLose(Player p) {
-        PauseTransition beforeDie = new PauseTransition(Duration.millis(300));
-        beforeDie.setOnFinished(e -> p.die());
+    private void handleLose(Player p1, Player p2) {
+        if (!p1Fading) {
+            p1Fading = true;
+            fadeOutPlayerSprite(p1, null);
+        }
+        if (!p2Fading) {
+            p2Fading = true;
+            fadeOutPlayerSprite(p2, null);
+        }
 
-        PauseTransition toStats = new PauseTransition(Duration.millis(1200));
+        PauseTransition toStats = new PauseTransition(Duration.seconds(2));
         toStats.setOnFinished(e -> SceneManager.goToGameOver(currentScore, currentP2Score, elapsedTimerMillis, currentLevel, activePlayer1Name, activePlayer2Name));
+        toStats.play();
+    }
 
-        new SequentialTransition(beforeDie, toStats).play();
+    private void fadeOutPlayerSprite(Player player, Runnable onFinished) {
+        if (player == null || player.sprite == null) {
+            if (onFinished != null) onFinished.run();
+            return;
+        }
+
+        FadeTransition fade = new FadeTransition(Duration.seconds(2), player.sprite);
+        fade.setFromValue(1.0);
+        fade.setToValue(0.0);
+        fade.setOnFinished(e -> {
+            player.die();
+            if (onFinished != null) onFinished.run();
+        });
+        fade.play();
     }
 
     private void handleWin() {

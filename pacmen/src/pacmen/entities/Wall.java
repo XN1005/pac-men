@@ -7,21 +7,17 @@ public class Wall extends Entity {
     public Rectangle sprite;
 
     public Wall(double x, double y) {
-        // Walls don't move, so speed is 0
+        // Walls don't move
         super(x, y, 0);
-        // CELL_SIZE is 20
+        // Size to 10 then connect later
         this.sprite = new Rectangle(10, 10, Color.BLUE);
         this.sprite.setX(x);
         this.sprite.setY(y);
     }
 
     @Override
-    public void update() {
-        // Walls are static; nothing to update
-    }
+    public void update() {}
 
     @Override
-    public void render() {
-        // JavaFX draws the rectangle
-    }
+    public void render() {}
 }

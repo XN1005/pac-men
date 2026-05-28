@@ -36,8 +36,8 @@ public class Leaderboard implements Initializable {
         }
 
         PriorityQueue<LeaderboardEntry> queue = new PriorityQueue<>();
-        for (Map.Entry<String, ScoreManager.ScoreData> entry : scores.entrySet()) {
-            queue.offer(new LeaderboardEntry(entry.getKey(), entry.getValue().timestamp, entry.getValue().score));
+        for (ScoreManager.ScoreData scoreData : scores.values()) {
+            queue.offer(new LeaderboardEntry(scoreData.name, scoreData.timestamp, scoreData.score));
         }
 
         List<LeaderboardEntry> ranked = new ArrayList<>();

@@ -20,12 +20,9 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
-/**
- * Controls the main menu screen.
- * Navigation: PLAY → GameScene | HOST/JOIN → MultiplayerScene
- */
 public class MainMenuController implements Initializable {
 
+    // ── FXML ───────────────────────────────────────────
     @FXML private StackPane rootPane;
     @FXML private StackPane splashOverlay;
     @FXML private Label titleLabel;

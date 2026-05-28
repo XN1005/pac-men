@@ -54,8 +54,8 @@
                         <Label styleClass="instruction-title" text="HOW TO PLAY" />
                         <Label styleClass="instruction-line" text="Player 1: WASD Controls" />
                         <Label styleClass="instruction-line" text="Player 2: Arrow Keys" />
-                        <Label styleClass="instruction-line" text="Collect all pellets to win." />
-                        <Label styleClass="instruction-line" text="Last one standing wins. If both survive, the one with higher score wins." />
+                        <Label styleClass="instruction-line" text="Collect all pellets, earn points, and avoid the ghosts!" />
+                        <Label styleClass="instruction-line" text="For Multiplayer: Player with the highest score wins." />
                     </VBox>
                 </HBox>
             </VBox>

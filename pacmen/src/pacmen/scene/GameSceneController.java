@@ -31,6 +31,7 @@ import java.util.Set;
 
 public class GameSceneController implements Initializable {
     
+    // ── FXML ───────────────────────────────────────────
     @FXML private StackPane rootPane;
     @FXML private Canvas    gameCanvas;      
     @FXML private StackPane canvasWrapper;   
@@ -43,8 +44,8 @@ public class GameSceneController implements Initializable {
     @FXML private Label     timerLabel;
     @FXML private HBox      livesBox;
     @FXML private Label     p1NameLabel;     
-
-    private static final long FIXED_FRAME_NANOS = 1_000_000_000L / 60;
+    
+    private static final long FIXED_FRAME_NANOS = 1_000_000_000L / 60; // Frame Rate (60fps)
 
     private long elapsedTimerMillis = 0;
     private long lastTimerUpdateNanos = 0;
@@ -52,19 +53,30 @@ public class GameSceneController implements Initializable {
     private long lastFrameNanos = 0;
     private long ghostScorePauseUntilNanos = 0;
 
+    // ── Game state ────────────────────────────────────────────────
     private String     state           = "ACTIVE"; 
     private GameMap    gameMap         = null;
     private int        currentScore    = 0;
-    private int        currentLives    = 1;
+    private int        currentLives    = 3;
     private int        currentLevel    = 1;
     private static int storedHighScore = 0;
-    private String     activePlayer1Name = "Player1"; 
+    private String     activePlayer1Name = "Player1";
+    private String     currentMapPath;
 
     private final Set<KeyCode> keysPressed = new HashSet<>();
 
     private AnimationTimer gameLoop;
     private Pane           gamePane;
 
+    private Player         player;
+    private Ghost          g1;
+    private Ghost          g2;
+    private Ghost          g3;
+    private Ghost          g4;
+    private static final int INITIAL_PLAYER_COL = 14;
+    private static final int INITIAL_PLAYER_ROW = 17;
+
+    // Take inputs
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         storedHighScore = ScoreManager.getInstance().getAbsoluteHighScore();
@@ -81,6 +93,7 @@ public class GameSceneController implements Initializable {
         });
     }
 
+    // ── MAIN ENTRY POINT ─────────────────────────────────────────
     public void initAndStartGame() {
         gamePane = new Pane();
         gamePane.setStyle("-fx-background-color: black;");
@@ -93,49 +106,26 @@ public class GameSceneController implements Initializable {
             p1NameLabel.setText(activePlayer1Name.toUpperCase());
         }
 
-        GameMap gameMap = new GameMap();
-        this.gameMap = gameMap;
-        MapLoader.loadMap(gameMap, mapPath);
-        MapLoader.connectWallCells(gameMap);
+        this.gameMap = new GameMap();
+        this.currentMapPath = mapPath;
+        MapLoader.loadMap(this.gameMap, mapPath);
+        MapLoader.connectWallCells(this.gameMap);
         fitMapToView();
 
-        final Player[] players = new Player[2];
         try {
-            players[0] = new Player(gameMap, 2.00, 1, 14, 17, activePlayer1Name);
+            this.player = new Player(this.gameMap, 2.00, 1, INITIAL_PLAYER_COL, INITIAL_PLAYER_ROW, activePlayer1Name);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (players[0] != null) players[0].setInput(keysPressed);
-        
-        final Player p1 = players[0];
+        if (this.player != null) this.player.setInput(keysPressed);
 
-        Ghost g1 = new Ghost(gameMap, 250, 300, 2.0, Color.RED, p1, "blinky");
-        Ghost g2 = new Ghost(gameMap, 230, 260, 2.0, Color.ORANGE, p1, "clyde");
-        Ghost g3 = new Ghost(gameMap, 310, 300, 2.0, Color.PINK, p1, "pinky");
-        Ghost g4 = new Ghost(gameMap, 330, 260, 2.0, Color.AQUA, p1, "inky");
-        g1.attachToPane(gamePane);
-        g2.attachToPane(gamePane);
-        g3.attachToPane(gamePane);
-
-        for (int x = 0; x < 28; x++) {
-            for (int y = 0; y < 36; y++) {
-                Cell cell = gameMap.getCell(x, y);
-                if (cell instanceof PelletCell)
-                    gamePane.getChildren().add(((PelletCell) cell).getPellet().sprite);
-                if (cell instanceof CherryCell)
-                    gamePane.getChildren().add(((CherryCell) cell).getCherry().sprite);
-                if (cell instanceof WallCell)
-                    gamePane.getChildren().add(((WallCell) cell).getSprite());
-            }
-        }
-
-        gamePane.getChildren().addAll(p1.sprite);
-        gamePane.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite, g4.sprite);
-        Platform.runLater(this::fitMapToView);
+        createGhosts();
+        rebuildGamePane();
 
         startCountdown(() -> {
             elapsedTimerMillis = 0;
             lastTimerUpdateNanos = System.nanoTime();
+            lastFrameNanos = 0;
             updateTimerDisplay();
 
             gameLoop = new AnimationTimer() {
@@ -155,7 +145,8 @@ public class GameSceneController implements Initializable {
                             g2.update();
                             g3.update();
                             g4.update();
-                            updateHUD(p1.score, storedHighScore, currentLevel);
+                            player.pausePowerUpTimer(FIXED_FRAME_NANOS);
+                            updateHUD(player.score, storedHighScore, currentLevel);
                             accumulatorNanos -= FIXED_FRAME_NANOS;
                             continue;
                         }
@@ -164,48 +155,48 @@ public class GameSceneController implements Initializable {
                             elapsedTimerMillis += FIXED_FRAME_NANOS / 1_000_000;
                             updateTimerDisplay();
 
-                            p1.update();
+                            player.update();
                             g1.update();
                             g2.update();
                             g3.update();
                             g4.update();
 
-                            if (Math.pow(Math.pow(p1.currentCol - g1.getGridX(), 2) + Math.pow(p1.currentRow - g1.getGridY(), 2), 0.5) <= 1) {
-                                boolean consumed = p1.collideGhost(g1);
+                            if (Math.pow(Math.pow(player.currentCol - g1.getGridX(), 2) + Math.pow(player.currentRow - g1.getGridY(), 2), 0.5) <= 1) {
+                                boolean consumed = player.collideGhost(g1);
                                 if (consumed) {
-                                    g1.collidePlayer(p1);
+                                    g1.collidePlayer(player);
                                     ghostScorePauseUntilNanos = now + 500_000_000L;
                                 }
                             }
-                            if (Math.pow(Math.pow(p1.currentCol - g2.getGridX(), 2) + Math.pow(p1.currentRow - g2.getGridY(), 2), 0.5) <= 1) {
-                                boolean consumed = p1.collideGhost(g2);
+                            if (Math.pow(Math.pow(player.currentCol - g2.getGridX(), 2) + Math.pow(player.currentRow - g2.getGridY(), 2), 0.5) <= 1) {
+                                boolean consumed = player.collideGhost(g2);
                                 if (consumed) {
-                                    g2.collidePlayer(p1);
+                                    g2.collidePlayer(player);
                                     ghostScorePauseUntilNanos = now + 500_000_000L;
                                 }
                             }
-                            if (Math.pow(Math.pow(p1.currentCol - g3.getGridX(), 2) + Math.pow(p1.currentRow - g3.getGridY(), 2), 0.5) <= 1) {
-                                boolean consumed = p1.collideGhost(g3);
+                            if (Math.pow(Math.pow(player.currentCol - g3.getGridX(), 2) + Math.pow(player.currentRow - g3.getGridY(), 2), 0.5) <= 1) {
+                                boolean consumed = player.collideGhost(g3);
                                 if (consumed) {
-                                    g3.collidePlayer(p1);
+                                    g3.collidePlayer(player);
                                     ghostScorePauseUntilNanos = now + 500_000_000L;
                                 }
                             }
-                            if (Math.pow(Math.pow(p1.currentCol - g4.getGridX(), 2) + Math.pow(p1.currentRow - g4.getGridY(), 2), 0.5) <= 1) {
-                                boolean consumed = p1.collideGhost(g4);
+                            if (Math.pow(Math.pow(player.currentCol - g4.getGridX(), 2) + Math.pow(player.currentRow - g4.getGridY(), 2), 0.5) <= 1) {
+                                boolean consumed = player.collideGhost(g4);
                                 if (consumed) {
-                                    g4.collidePlayer(p1);
+                                    g4.collidePlayer(player);
                                     ghostScorePauseUntilNanos = now + 500_000_000L;
                                 }
                             }
 
-                            updateHUD(p1.score, storedHighScore, currentLevel);
+                            updateHUD(player.score, storedHighScore, currentLevel);
                             setLives(currentLives);
 
-                            if (p1.state.equals("DEAD") && !state.equals("LOSE")) {
+                            if (player.state.equals("DEAD") && !state.equals("LOSE")) {
                                 state = "LOSE";
                                 stop();
-                                handleLose(p1);
+                                handleLose(player);
                                 return;
                             }
 
@@ -277,6 +268,7 @@ public class GameSceneController implements Initializable {
     public void startCountdown(Runnable onGo) {
         countdownOverlay.setVisible(true);
         countdownOverlay.setManaged(true);
+        countdownOverlay.setOpacity(1.0);
         String[] steps = {"3", "2", "1", "GO!"};
 
         Timeline tl = new Timeline();
@@ -347,20 +339,104 @@ public class GameSceneController implements Initializable {
     }
 
     private void handleLose(Player p) {
-        PauseTransition beforeDie = new PauseTransition(Duration.millis(300));
-        beforeDie.setOnFinished(e -> p.die());
-
-        PauseTransition toStats = new PauseTransition(Duration.millis(1200));
-        toStats.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2", "LOSE"));
-
-        SequentialTransition seq = new SequentialTransition(beforeDie, toStats);
-        seq.play();
+        fadeOutPlayerSprite(p, () -> {
+            if (currentLives > 1) {
+                setLives(currentLives - 1);
+                resetPlayerAfterDeath();
+                startCountdown(() -> {
+                    state = "ACTIVE";
+                    lastFrameNanos = 0;
+                    if (gameLoop != null) gameLoop.start();
+                });
+            } else {
+                SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2", "LOSE");
+            }
+        });
     }
 
     private void handleWin() {
-        PauseTransition winDelay = new PauseTransition(Duration.millis(800));
-        winDelay.setOnFinished(e -> SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2", "WIN"));
-        winDelay.play();
+        PauseTransition freeze = new PauseTransition(Duration.seconds(2));
+        freeze.setOnFinished(e -> {
+            resetRoundKeepScore();
+            startCountdown(() -> {
+                state = "ACTIVE";
+                elapsedTimerMillis = 0;
+                updateTimerDisplay();
+                lastFrameNanos = 0;
+                if (gameLoop != null) gameLoop.start();
+            });
+        });
+        freeze.play();
+    }
+
+    private void fadeOutPlayerSprite(Player p, Runnable onFinished) {
+        FadeTransition fade = new FadeTransition(Duration.seconds(2), p.sprite);
+        fade.setFromValue(1.0);
+        fade.setToValue(0.0);
+        fade.setOnFinished(e -> {
+            p.die();
+            if (onFinished != null) onFinished.run();
+        });
+        fade.play();
+    }
+
+    private void createGhosts() {
+        if (gameMap == null || player == null) return;
+        g1 = new Ghost(gameMap, 250, 310, 2.0, Color.RED, player, "blinky");
+        g2 = new Ghost(gameMap, 230, 270, 2.0, Color.ORANGE, player, "clyde");
+        g3 = new Ghost(gameMap, 310, 310, 2.0, Color.PINK, player, "pinky");
+        g4 = new Ghost(gameMap, 330, 270, 2.0, Color.AQUA, player, "inky");
+    }
+
+    private void rebuildGamePane() {
+        if (gamePane == null || gameMap == null) return;
+        gamePane.getChildren().clear();
+        for (int x = 0; x < gameMap.getCols(); x++) {
+            for (int y = 0; y < gameMap.getRows(); y++) {
+                Cell cell = gameMap.getCell(x, y);
+                if (cell instanceof PelletCell)
+                    gamePane.getChildren().add(((PelletCell) cell).getPellet().sprite);
+                if (cell instanceof CherryCell)
+                    gamePane.getChildren().add(((CherryCell) cell).getCherry().sprite);
+                if (cell instanceof WallCell)
+                    gamePane.getChildren().add(((WallCell) cell).getSprite());
+            }
+        }
+        if (g1 != null) g1.attachToPane(gamePane);
+        if (g2 != null) g2.attachToPane(gamePane);
+        if (g3 != null) g3.attachToPane(gamePane);
+        if (g4 != null) g4.attachToPane(gamePane);
+        if (player != null) gamePane.getChildren().add(player.sprite);
+        if (g1 != null && g2 != null && g3 != null && g4 != null)
+            gamePane.getChildren().addAll(g1.sprite, g2.sprite, g3.sprite, g4.sprite);
+        Platform.runLater(this::fitMapToView);
+    }
+
+    private void resetPlayerAfterDeath() {
+        if (player == null) return;
+        player.resetPosition(INITIAL_PLAYER_COL, INITIAL_PLAYER_ROW);
+        recreateGhosts();
+        ghostScorePauseUntilNanos = 0;
+    }
+
+    private void recreateGhosts() {
+        if (gamePane == null || gameMap == null || player == null) return;
+        createGhosts();
+        rebuildGamePane();
+    }
+
+    private void resetRoundKeepScore() {
+        if (gameMap == null || currentMapPath == null) return;
+        MapLoader.loadMap(gameMap, currentMapPath);
+        MapLoader.connectWallCells(gameMap);
+        createGhosts();
+        rebuildGamePane();
+        if (player != null) {
+            player.resetPosition(INITIAL_PLAYER_COL, INITIAL_PLAYER_ROW);
+        }
+        ghostScorePauseUntilNanos = 0;
+        state = "ACTIVE";
+        setLives(currentLives);
     }
 
     @FXML 

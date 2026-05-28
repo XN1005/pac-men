@@ -38,7 +38,7 @@
 
             <!-- Final Score row -->
             <HBox alignment="CENTER_LEFT" spacing="0">
-                <Label fx:id="finalScoreTitleLabel" styleClass="stat-label" text="FINAL SCORE" HBox.hgrow="ALWAYS" />
+                <Label fx:id="finalScoreTitleLabel" styleClass="stat-label" text="FINAL SCORE:  " HBox.hgrow="ALWAYS" />
                 <Label fx:id="finalScoreLabel" styleClass="stat-value" text="0" />
             </HBox>
 
@@ -46,7 +46,7 @@
 
             <!-- High Score row -->
             <HBox alignment="CENTER_LEFT" spacing="0">
-                <Label fx:id="highScoreTitleLabel" styleClass="stat-label" text="HIGH SCORE" HBox.hgrow="ALWAYS" />
+                <Label fx:id="highScoreTitleLabel" styleClass="stat-label" text="HIGH SCORE:  " HBox.hgrow="ALWAYS" />
                 <Label fx:id="highScoreLabel" styleClass="stat-value" text="0" />
             </HBox>
 
@@ -54,7 +54,7 @@
 
             <!-- Level Reached row -->
             <HBox alignment="CENTER_LEFT" spacing="0">
-                <Label styleClass="stat-label" text="LEVEL REACHED" HBox.hgrow="ALWAYS" />
+                <Label styleClass="stat-label" text="MAP PLAYED:  " HBox.hgrow="ALWAYS" />
                 <Label fx:id="levelLabel" styleClass="stat-value" text="1" />
             </HBox>
 
@@ -62,7 +62,7 @@
 
             <!-- Time Survived row -->
             <HBox alignment="CENTER_LEFT" spacing="0">
-                <Label styleClass="stat-label" text="TIME SURVIVED" HBox.hgrow="ALWAYS" />
+                <Label styleClass="stat-label" text="TIME SURVIVED:  " HBox.hgrow="ALWAYS" />
                 <Label fx:id="timeLabel" styleClass="stat-value" text="00:00" />
             </HBox>
         </VBox>

@@ -15,6 +15,7 @@ import java.util.ResourceBundle;
 
 public class GameOverSceneController implements Initializable {
 
+    // ── FXML ───────────────────────────────────────────
     @FXML private StackPane rootPane;
     @FXML private Label     titleLabel;
     @FXML private Label     subtitleLabel;
@@ -60,14 +61,20 @@ public class GameOverSceneController implements Initializable {
         }
 
         boolean isNewHigh = !isMultiplayer && finalScore > ScoreManager.getInstance().getAbsoluteHighScore();
-        if (!isMultiplayer && isNewHigh) {
+        // Submit scores for specific gamemodes
+        if (!isMultiplayer) {
             ScoreManager.getInstance().submitScore(p1Name, finalScore);
+        }
+
+        if (isMultiplayer) {
+            ScoreManager.getInstance().submitScore(p1Name, player1Score);
+            ScoreManager.getInstance().submitScore(p2Name, player2Score);
         }
 
         populateStats(player1Score, player2Score, isNewHigh, finalLevel, elapsedMillis, isMultiplayer, resultStatus, p1Name, p2Name);
         animateEntrance(isNewHigh);
     }
-
+    // ── STATISTICS ───────────────────────────────────────────
     private void populateStats(int player1Score, int player2Score, boolean isNewHigh, int level, long elapsedMillis, boolean isMultiplayer, String resultStatus, String p1Name, String p2Name) {
         if (isMultiplayer) {
             finalScoreTitleLabel.setText("PLAYER 1 SCORE:  ");
@@ -84,8 +91,8 @@ public class GameOverSceneController implements Initializable {
             newHighScoreLabel.setVisible(false);
             newHighScoreLabel.setManaged(false);
         } else {
-            finalScoreTitleLabel.setText("FINAL SCORE");
-            highScoreTitleLabel.setText("HIGH SCORE");
+            finalScoreTitleLabel.setText("FINAL SCORE:  ");
+            highScoreTitleLabel.setText("HIGH SCORE:  ");
             finalScoreLabel.setText(String.format("%06d", player1Score));
             highScoreLabel.setText(String.format("%06d", Math.max(player1Score, ScoreManager.getInstance().getAbsoluteHighScore())));
 
@@ -123,7 +130,7 @@ public class GameOverSceneController implements Initializable {
             pause.play();
         }
     }
-
+    // ── REDIRECT ───────────────────────────────────────────
     @FXML private void onPlayAgain() {
         if (wasMultiplayer) {
             SceneManager.goTo(SceneManager.MULTIPLAYER);
