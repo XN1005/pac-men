@@ -236,11 +236,11 @@ public class Player extends Entity implements Collision {
                 return true;
             }
             else if(ghost.currentState == Ghost.GhostState.EATEN) return false;
-
+            this.sprite.setVisible(false);
             this.state = "DEAD";
             return false;
         }
-
+        this.sprite.setVisible(false);
         this.state = "DEAD";
         return false;
     }

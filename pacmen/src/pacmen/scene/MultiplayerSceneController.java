@@ -125,8 +125,8 @@ public class MultiplayerSceneController implements Initializable {
         // 3. Players
         final Player[] players = new Player[2];
         try {
-            players[0] = new Player(gameMap, 3.0, 1, 6, 14, activePlayer1Name);
-            players[1] = new Player(gameMap, 3.0, 2, 21, 14, activePlayer2Name);
+            players[0] = new Player(gameMap, 2.0, 1, 6, 14, activePlayer1Name);
+            players[1] = new Player(gameMap, 2.0, 2, 21, 14, activePlayer2Name);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -137,10 +137,10 @@ public class MultiplayerSceneController implements Initializable {
         final Player p2 = players[1];
 
         // 4. Ghosts
-        Ghost g1 = new Ghost(gameMap, 250, 300, 3.0, Color.RED, p1, "blinky");
-        Ghost g2 = new Ghost(gameMap, 230, 260, 3.0, Color.ORANGE, p1, "clyde");
-        Ghost g3 = new Ghost(gameMap, 310, 300, 3.0, Color.PINK, p2, "pinky");
-        Ghost g4 = new Ghost(gameMap, 330, 260, 3.0, Color.AQUA, p2, "inky");
+        Ghost g1 = new Ghost(gameMap, 250, 300, 2.0, Color.RED, p1, "blinky");
+        Ghost g2 = new Ghost(gameMap, 230, 260, 2.0, Color.ORANGE, p1, "clyde");
+        Ghost g3 = new Ghost(gameMap, 310, 300, 2.0, Color.PINK, p2, "pinky");
+        Ghost g4 = new Ghost(gameMap, 330, 260, 2.0, Color.AQUA, p2, "inky");
         g1.attachToPane(gamePane);
         g2.attachToPane(gamePane);
         g3.attachToPane(gamePane);
@@ -186,9 +186,9 @@ public class MultiplayerSceneController implements Initializable {
 
                         if (ghostScorePauseUntilNanos > now) {
                             g1.update();
-                            g2.update();
-                            g3.update();
-                            g4.update();
+                            // g2.update();
+                            // g3.update();
+                            // g4.update();
                             updateHUD(p1.score, p2.score, currentLevel);
                             accumulatorNanos -= FIXED_FRAME_NANOS;
                             continue;
