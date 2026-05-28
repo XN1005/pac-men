@@ -26,6 +26,8 @@ public class GameOverSceneController implements Initializable {
     @FXML private Label     timeLabel;
     @FXML private Label     newHighScoreLabel;
 
+    private boolean wasMultiplayer = false;
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         int finalScore = 0;
@@ -51,6 +53,8 @@ public class GameOverSceneController implements Initializable {
 
             if (data.player1Name != null) p1Name = data.player1Name;
             if (data.player2Name != null) p2Name = data.player2Name;
+            isMultiplayer = data.isMultiplayer;
+            wasMultiplayer = isMultiplayer;
 
             SceneManager.clearPendingGameOverData();
         }
@@ -120,7 +124,13 @@ public class GameOverSceneController implements Initializable {
         }
     }
 
-    @FXML private void onPlayAgain()   { SceneManager.goTo(SceneManager.GAME); }
+    @FXML private void onPlayAgain() {
+        if (wasMultiplayer) {
+            SceneManager.goTo(SceneManager.MULTIPLAYER);
+        } else {
+            SceneManager.goTo(SceneManager.GAME);
+        }
+    }
     @FXML private void onMultiplayer() { SceneManager.goTo(SceneManager.MULTIPLAYER); }
     @FXML private void onMainMenu()    { SceneManager.goTo(SceneManager.MENU); }
 }
