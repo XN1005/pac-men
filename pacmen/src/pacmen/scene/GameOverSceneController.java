@@ -15,6 +15,7 @@ import java.util.ResourceBundle;
 
 public class GameOverSceneController implements Initializable {
 
+    // ── FXML ───────────────────────────────────────────
     @FXML private StackPane rootPane;
     @FXML private Label     titleLabel;
     @FXML private Label     subtitleLabel;
@@ -26,48 +27,89 @@ public class GameOverSceneController implements Initializable {
     @FXML private Label     timeLabel;
     @FXML private Label     newHighScoreLabel;
 
+    private boolean wasMultiplayer = false;
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         int finalScore = 0;
+        int player1Score = 0;
+        int player2Score = 0;
         long elapsedMillis = 0;
         int finalLevel = 1;
-        String activePlayerName = "Player1"; // Setup fallback string
+
+        String p1Name = "Player1";
+        String p2Name = "Player2";
+        String resultStatus = null;
+        boolean isMultiplayer = false;
 
         SceneManager.GameOverData data = SceneManager.getPendingGameOverData();
         if (data != null) {
             finalScore = data.finalScore;
+            player1Score = data.player1Score;
+            player2Score = data.player2Score;
             elapsedMillis = data.elapsedMillis;
             finalLevel = data.level;
-            
-            // Extract the real player name from the active gameplay instance!
-            if (data.player1Name != null) {
-                activePlayerName = data.player1Name;
-            }
+            resultStatus = data.resultStatus;
+            isMultiplayer = data.isMultiplayer;
+
+            if (data.player1Name != null) p1Name = data.player1Name;
+            if (data.player2Name != null) p2Name = data.player2Name;
+            isMultiplayer = data.isMultiplayer;
+            wasMultiplayer = isMultiplayer;
+
             SceneManager.clearPendingGameOverData();
         }
 
-        int storedHighScore = ScoreManager.getInstance().getAbsoluteHighScore();
-        boolean isNewHigh = finalScore > storedHighScore;
-        if (isNewHigh) storedHighScore = finalScore;
+        boolean isNewHigh = !isMultiplayer && finalScore > ScoreManager.getInstance().getAbsoluteHighScore();
+        // Submit scores for specific gamemodes
+        if (!isMultiplayer) {
+            ScoreManager.getInstance().submitScore(p1Name, finalScore);
+        }
 
-        // Submit the actual active player's name instead of the placeholder stub!
-        ScoreManager.getInstance().submitScore(activePlayerName, finalScore);
+        if (isMultiplayer) {
+            ScoreManager.getInstance().submitScore(p1Name, player1Score);
+            ScoreManager.getInstance().submitScore(p2Name, player2Score);
+        }
 
-        populateStats(finalScore, storedHighScore, isNewHigh, finalLevel, elapsedMillis);
+        populateStats(player1Score, player2Score, isNewHigh, finalLevel, elapsedMillis, isMultiplayer, resultStatus, p1Name, p2Name);
         animateEntrance(isNewHigh);
     }
+    // ── STATISTICS ───────────────────────────────────────────
+    private void populateStats(int player1Score, int player2Score, boolean isNewHigh, int level, long elapsedMillis, boolean isMultiplayer, String resultStatus, String p1Name, String p2Name) {
+        if (isMultiplayer) {
+            finalScoreTitleLabel.setText("PLAYER 1 SCORE:  ");
+            highScoreTitleLabel.setText("PLAYER 2 SCORE:  ");
+            finalScoreLabel.setText(String.format("%06d", player1Score));
+            highScoreLabel.setText(String.format("%06d", player2Score));
 
-    private void populateStats(int score, int highScore, boolean isNewHigh, int level, long elapsedMillis) {
-        finalScoreLabel.setText(String.format("%06d", score));
-        highScoreLabel.setText(String.format("%06d", highScore));
+            if (player1Score == player2Score) {
+                subtitleLabel.setText("GAME DRAW! PLAY AGAIN?");
+            } else {
+                String winnerName = player1Score > player2Score ? p1Name : p2Name;
+                subtitleLabel.setText((winnerName + " WINS!").toUpperCase());
+            }
+            newHighScoreLabel.setVisible(false);
+            newHighScoreLabel.setManaged(false);
+        } else {
+            finalScoreTitleLabel.setText("FINAL SCORE:  ");
+            highScoreTitleLabel.setText("HIGH SCORE:  ");
+            finalScoreLabel.setText(String.format("%06d", player1Score));
+            highScoreLabel.setText(String.format("%06d", Math.max(player1Score, ScoreManager.getInstance().getAbsoluteHighScore())));
+
+            if ("WIN".equals(resultStatus)) {
+                subtitleLabel.setText("LEVEL CLEAR, YOU WIN!");
+            } else {
+                subtitleLabel.setText("BETTER LUCK NEXT TIME");
+            }
+
+            if (isNewHigh) {
+                newHighScoreLabel.setVisible(true);
+                newHighScoreLabel.setManaged(true);
+            }
+        }
 
         levelLabel.setText(String.valueOf(level));
         timeLabel.setText(TimerDisplay.formatElapsedTime(elapsedMillis));
-
-        if (isNewHigh) {
-            newHighScoreLabel.setVisible(true);
-            newHighScoreLabel.setManaged(true);
-        }
     }
 
     private void animateEntrance(boolean isNewHigh) {
@@ -88,8 +130,14 @@ public class GameOverSceneController implements Initializable {
             pause.play();
         }
     }
-
-    @FXML private void onPlayAgain()   { SceneManager.goTo(SceneManager.GAME); }
+    // ── REDIRECT ───────────────────────────────────────────
+    @FXML private void onPlayAgain() {
+        if (wasMultiplayer) {
+            SceneManager.goTo(SceneManager.MULTIPLAYER);
+        } else {
+            SceneManager.goTo(SceneManager.GAME);
+        }
+    }
     @FXML private void onMultiplayer() { SceneManager.goTo(SceneManager.MULTIPLAYER); }
     @FXML private void onMainMenu()    { SceneManager.goTo(SceneManager.MENU); }
 }

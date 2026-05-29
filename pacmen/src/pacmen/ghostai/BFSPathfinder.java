@@ -188,18 +188,6 @@ public class BFSPathfinder {
             }
         }
 
-        // if (legalDirections.isEmpty()) {
-        //     int reverse = opposite(currentDirection);
-
-        //     int nextX = gridX + DX[reverse];
-        //     int nextY = gridY + DY[reverse];
-
-        //     if (isInsideMap(map, nextX, nextY)
-        //             && map.isMoveValid(ghost, nextX, nextY)) {
-        //         legalDirections.add(reverse);
-        //     }
-        // }
-
         return legalDirections;
     }
 

@@ -1,11 +1,11 @@
 package pacmen.datamanager;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ScoreManager {
     private static ScoreManager instance;
@@ -21,7 +21,7 @@ public class ScoreManager {
     private static final String DATA_FILE = "resources/data/data.txt";
     
     // Map structure to store all data
-    // Key: player name, Value: ScoreData (timestamp + score)
+    // Key: player name + timestamp, Value: ScoreData (name + timestamp + score)
     private Map<String, ScoreData> globalScores;
 
     private ScoreManager() {
@@ -82,12 +82,9 @@ public class ScoreManager {
             String[] parts = trimmed.split("\\s+");
             if (parts.length >= 3) {
                 try {
-                    // Extract score from the last position
                     int score = Integer.parseInt(parts[parts.length - 1]);
-                    // Extract timestamp from the second to last position
                     String timestamp = parts[parts.length - 2];
-                    
-                    // Everything before that is the player's name (reconstructs spaces if any)
+
                     StringBuilder nameBuilder = new StringBuilder();
                     for (int i = 0; i < parts.length - 2; i++) {
                         if (i > 0) nameBuilder.append(" ");
@@ -95,10 +92,10 @@ public class ScoreManager {
                     }
                     String name = nameBuilder.toString().trim();
 
-                    // Rule: Only keep the high score entry. If equal, keep the most recent timestamp.
-                    ScoreData existing = globalScores.get(name);
+                    String key = name + "|" + timestamp;
+                    ScoreData existing = globalScores.get(key);
                     if (existing == null || score > existing.score) {
-                        globalScores.put(name, new ScoreData(timestamp, score));
+                        globalScores.put(key, new ScoreData(name, timestamp, score));
                     }
                 } catch (NumberFormatException e) {
                     System.err.println("Skipping malformed score line: " + line);
@@ -113,20 +110,19 @@ public class ScoreManager {
 
         loadGlobalScores();
 
-        // Generate current timestamp
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm");
         String currentTimestamp = now.format(formatter);
+        String key = cleanName + "|" + currentTimestamp;
 
-        ScoreData existing = globalScores.get(cleanName);
+        ScoreData existing = globalScores.get(key);
         if (existing == null || score > existing.score) {
-            globalScores.put(cleanName, new ScoreData(currentTimestamp, score));
+            globalScores.put(key, new ScoreData(cleanName, currentTimestamp, score));
         }
 
-        // Convert map structures back into string data rows
         List<String> output = new ArrayList<>();
-        for (Map.Entry<String, ScoreData> entry : globalScores.entrySet()) {
-            output.add(entry.getKey() + " " + entry.getValue().timestamp + " " + entry.getValue().score);
+        for (ScoreData scoreData : globalScores.values()) {
+            output.add(scoreData.name + " " + scoreData.timestamp + " " + scoreData.score);
         }
 
         SaveSystem.saveLines(DATA_FILE, output);
@@ -147,12 +143,14 @@ public class ScoreManager {
         return globalScores;
     }
 
-    // helper class to store both timestamp and score for a player
+    // helper class to store full saved score details
     public static class ScoreData {
+        public final String name;
         public final String timestamp;
         public final int score;
 
-        public ScoreData(String timestamp, int score) {
+        public ScoreData(String name, String timestamp, int score) {
+            this.name = name;
             this.timestamp = timestamp;
             this.score = score;
         }

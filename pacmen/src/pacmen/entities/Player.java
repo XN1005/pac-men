@@ -10,20 +10,17 @@ import pacmen.map.GameMap;
 
 public class Player extends Entity implements Collision {
     
-    // Multi-directional sprite management: 4 directions x 3 animation frames each
+    // LOAD SPRITE
     public ImageView sprite;
-    
-    /** * 2D Array to hold preloaded images:
-     * First index [direction]: 0 = Up, 1 = Right, 2 = Down, 3 = Left (matches game engine codes)
-     * Second index [frame]:    0 = Fully Open, 1 = Half Open, 2 = Closed
-     */
     private Image[][] directionalFrames = new Image[4][3];
     
+    // CONSTANTS
     private int frameTick = 0;
     private int currentFrameIndex = 0;
-    // Sequence: Fully Open(0) -> Half Open(1) -> Closed(2) -> Half Open(1) -> loop
+    // ANIMATION FRAME SEQUENCE
     private static final int[] ANIMATION_SEQUENCE = {0, 1, 2, 1}; 
 
+    // STATES AND PROPERTIES
     public int score;
     public int num;
     private String name;
@@ -57,13 +54,13 @@ public class Player extends Entity implements Collision {
         this.combo = 0;
         this.powerUpTime = 0;
         this.map = map;
-        this.direction = 1; // Start facing Right
+        this.direction = 1; // Start with facing Right
         this.currentCol = col;
         this.currentRow = row;
 
         // Preload all directional assets into directionalFrames
         String[] dirFolders = {"up", "right", "down", "left"};
-        String baseCharacterFolder = "pacman" + this.num; // pacman1 or pacman2
+        String baseCharacterFolder = "pacman" + this.num; // Choose pacman folder for sprite loading
 
         for (int d = 0; d < 4; d++) {
             String fullPathFolder = baseCharacterFolder + "-" + dirFolders[d];
@@ -76,7 +73,7 @@ public class Player extends Entity implements Collision {
             }
         }
 
-        // Initialize sprite viewport with facing-right, fully-open mouth frame
+        // Initialize sprite viewport
         this.sprite = new ImageView(directionalFrames[1][0]);
         this.sprite.setFitWidth(30);
         this.sprite.setFitHeight(30);
@@ -136,30 +133,24 @@ public class Player extends Entity implements Collision {
             map.getCell(targetCol, targetRow).onSteppedOn(this);
         }
         
-        // Render step
+        // Render
         updateVisuals();
     }
     
     private void updateVisuals() {
-        // Positioning: Center the sprite on the player's (x, y) coordinates
+        // Repositioning
         this.sprite.setX(x - 15);
         this.sprite.setY(y - 15);
 
-        // Set rotate to 0 for all direcions
         this.sprite.setRotate(0);
 
-        // Dynamic image swapping
-        // Check safety bounds to verify direction contains a valid index (0 to 3)
         if (direction >= 0 && direction <= 3) {
             frameTick++;
-            // Cycle animation frames every 4 game ticks
             if (frameTick % 4 == 0) {
                 currentFrameIndex = (currentFrameIndex + 1) % ANIMATION_SEQUENCE.length;
             }
             
             int activeFrameNumber = ANIMATION_SEQUENCE[currentFrameIndex];
-            
-            // Swap out the image source entirely based on current direction array index
             this.sprite.setImage(directionalFrames[direction][activeFrameNumber]);
         }
     }
@@ -208,36 +199,58 @@ public class Player extends Entity implements Collision {
     
     @Override public void consumePowerPellet() {
         this.score += 50;
-        this.state = "POWER_UP"; 
+        this.state = "POWER_UP";
         this.powerUpTime = System.nanoTime();
     }
     
     @Override public void collideCherry() { this.score += 5; }
     
-    @Override public void collideGhost() { 
+    @Override public void collideGhost() {
         if (!this.state.equals("POWER_UP")) {
-            this.state = "DEAD"; 
-            this.sprite.setVisible(false);
+            this.state = "DEAD";
         }
+    }
+
+    public void resetPosition(int col, int row) {
+        this.currentCol = col;
+        this.currentRow = row;
+        this.x = (col * 20) + 10;
+        this.y = (row * 20) + 10;
+        this.direction = 1;
+        this.state = "ACTIVE";
+        this.sprite.setVisible(true);
+        this.sprite.setOpacity(1.0);
+        updateVisuals();
     }
 
     public int getLastGhostScoreAwarded() {
         return this.lastGhostScoreAwarded;
     }
 
-    public void collideGhost(Ghost ghost) {
+    public void pausePowerUpTimer(long pauseNanos) {
+        if (this.state.equals("POWER_UP")) {
+            this.powerUpTime -= pauseNanos;
+        }
+    }
+
+    public boolean collideGhost(Ghost ghost) {
         this.lastGhostScoreAwarded = 0;
         if (this.state.equals("POWER_UP")) {
             if (ghost.currentState == Ghost.GhostState.FRIGHTENED) {
                 ghost.already_eaten = true;
                 this.lastGhostScoreAwarded = 200 * (int) (Math.pow(2, this.combo));
                 this.score += this.lastGhostScoreAwarded;
-                if (this.combo < 3) this.combo++; 
+                if (this.combo < 2) this.combo++; // MAX COMBO: 0 -> 3
+                return true;
+            } else if (ghost.currentState == Ghost.GhostState.EATEN) {
+                return false;
             }
-        } else {
             this.state = "DEAD";
-            this.sprite.setVisible(false);
+            return false;
         }
+        if (ghost.currentState == Ghost.GhostState.FRIGHTENED || ghost.currentState == Ghost.GhostState.EATEN) return false;
+        this.state = "DEAD";
+        return false;
     }
     
     public void collidePlayer() {}

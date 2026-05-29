@@ -40,7 +40,6 @@ public class TargetingStrategy {
             return getScatterTarget(name, mapCols, mapRows);
         }
 
-        // Fixed:ImageView corner offsets converted back to center coordinate points
         int playerX = pixelToGrid(player.sprite.getX() + 15);
         int playerY = pixelToGrid(player.sprite.getY() + 15);
 
@@ -113,7 +112,6 @@ public class TargetingStrategy {
         int twoAheadX = playerX + delta[0] * 2;
         int twoAheadY = playerY + delta[1] * 2;
 
-        // Fixed: Extracted center point from Blinky's ImageView sprite properties
         int blinkyX = pixelToGrid(blinky.sprite.getX() + 15);
         int blinkyY = pixelToGrid(blinky.sprite.getY() + 15);
 
@@ -185,7 +183,6 @@ public class TargetingStrategy {
         if (ghost == null || ghost.sprite == null) {
             return 0;
         }
-        // Fixed: Adjusted logic to account for ImageView bounds
         return pixelToGrid(ghost.sprite.getX() + 15);
     }
 
@@ -193,7 +190,6 @@ public class TargetingStrategy {
         if (ghost == null || ghost.sprite == null) {
             return 0;
         }
-        // Fixed: Adjusted logic to account for ImageView bounds
         return pixelToGrid(ghost.sprite.getY() + 15);
     }
 
@@ -201,7 +197,6 @@ public class TargetingStrategy {
         if (player == null || player.sprite == null) {
             return 0;
         }
-        // Fixed: Adjusted logic to account for ImageView bounds
         return pixelToGrid(player.sprite.getX() + 15);
     }
 
@@ -209,7 +204,6 @@ public class TargetingStrategy {
         if (player == null || player.sprite == null) {
             return 0;
         }
-        // Fixed: Adjusted logic to account for ImageView bounds
         return pixelToGrid(player.sprite.getY() + 15);
     }
 
