@@ -66,6 +66,7 @@ public class GameSceneController implements Initializable {
     private final Set<KeyCode> keysPressed = new HashSet<>();
 
     private AnimationTimer gameLoop;
+    private Timeline       countdownTimeline;
     private Pane           gamePane;
 
     private Player         player;
@@ -271,10 +272,10 @@ public class GameSceneController implements Initializable {
         countdownOverlay.setOpacity(1.0);
         String[] steps = {"3", "2", "1", "GO!"};
 
-        Timeline tl = new Timeline();
+        countdownTimeline = new Timeline();
         for (int i = 0; i < steps.length; i++) {
             final String text = steps[i];
-            tl.getKeyFrames().add(new KeyFrame(Duration.seconds(i), e -> {
+            countdownTimeline.getKeyFrames().add(new KeyFrame(Duration.seconds(i), e -> {
                 countdownLabel.setText(text);
                 ScaleTransition pop = new ScaleTransition(Duration.millis(300), countdownLabel);
                 pop.setFromX(1.5); pop.setFromY(1.5);
@@ -282,7 +283,7 @@ public class GameSceneController implements Initializable {
                 pop.play();
             }));
         }
-        tl.getKeyFrames().add(new KeyFrame(Duration.seconds(steps.length), e -> {
+        countdownTimeline.getKeyFrames().add(new KeyFrame(Duration.seconds(steps.length), e -> {
             FadeTransition fade = new FadeTransition(Duration.millis(300), countdownOverlay);
             fade.setToValue(0);
             fade.setOnFinished(ev -> {
@@ -292,10 +293,11 @@ public class GameSceneController implements Initializable {
             });
             fade.play();
         }));
-        tl.play();
+        countdownTimeline.play();
     }
 
     public void triggerGameOver() {
+        if (countdownTimeline != null) countdownTimeline.stop();
         if (gameLoop != null) gameLoop.stop();
         SceneManager.goToGameOver(currentScore, elapsedTimerMillis, currentLevel, activePlayer1Name, "Player2", "LOSE");
     }
@@ -441,6 +443,7 @@ public class GameSceneController implements Initializable {
 
     @FXML 
     private void onMainMenu() {
+        if (countdownTimeline != null) countdownTimeline.stop();
         if (gameLoop != null) gameLoop.stop();
         SceneManager.goTo(SceneManager.MENU);
     }
