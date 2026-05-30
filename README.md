@@ -23,8 +23,14 @@ The project was built with Java, with JavaFX and CSS being the main components f
 | Move Left | A | ← |
 | Move Right | D | → |
 
+# Installation
+Make sure you have [Java 21](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html) and [JavaFX](https://gluonhq.com/products/javafx/) 21 JDK installed on your machine.
 
-# Project Structure
+For Windows users, download the zip of the code base, unzip, then run the .exe file found in pac-men/pacmen/PacMen.exe.
+
+For MacOS and Linux users, download the zip of the code base, unzip, then launch the project in a compiler like Visual Studio Code. 
+
+## Project Structure
 ### Main program
 Main.java starts the game.
 
