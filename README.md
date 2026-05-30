@@ -1,6 +1,12 @@
 # pac-men
 This is the git repository for the project's development.
 
+# About
+lorem ipsum
+
+# Features
+lorem ipsum
+
 ## Main program
 Main.java starts the game.
 
