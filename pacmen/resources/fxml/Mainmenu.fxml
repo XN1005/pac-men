@@ -37,7 +37,7 @@
         <VBox fx:id="menuButtons" alignment="CENTER" spacing="18" styleClass="menu-vbox">
             <VBox alignment="CENTER" spacing="10" maxWidth="720" styleClass="config-panel">
                 <Label styleClass="config-title" text="GAME SETUP" />
-                <Label styleClass="config-hint" text="Names are automatically cleaned to remove spaces." />
+                <Label styleClass="config-hint" text="Enter your username and choose the map you want to play!" />
 
                 <HBox alignment="CENTER" spacing="14" maxWidth="680">
                     <TextField fx:id="player1Input" promptText="Player 1 Name" styleClass="text-input" HBox.hgrow="ALWAYS" />
