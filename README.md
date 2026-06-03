@@ -24,11 +24,13 @@ The project was built with Java, with JavaFX and CSS being the main components f
 | Move Right | D | → |
 
 # Installation
-Make sure you have [Java 21](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html) and [JavaFX](https://gluonhq.com/products/javafx/) 21 JDK installed on your machine.
+Make sure you have the correct versions of [Java 21](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html) and [JavaFX](https://gluonhq.com/products/javafx/) 21 JDK installed on your machine.
 
-For Windows users, download the zip of the code base, unzip, then run the .exe file found in pac-men/pacmen/PacMen.exe.
+For Windows users, download the zip of the code base, unzip, then run the .exe file or .jar file found in pac-men-master/pacmen/.
 
-For MacOS and Linux users, download the zip of the code base, unzip, then launch the project in a compiler like Visual Studio Code. 
+For MacOS/Linux users, download the zip of the code base and unzip (make sure to disable [Gatekeeper](https://en.wikipedia.org/wiki/Gatekeeper_(macOS)) for machines running on recent MacOS versions). Access the directory pac-men-master/pacmen via the terminal through `cd /[your unzipped code base's location]/pac-men-master/pacmen`, then run the command `java --module-path "/[your JavaFX SDK dependency's location]/javafx-sdk-21.0.11/lib" --add-modules javafx.controls,javafx.fxml -jar pacmen.jar`. 
+
+You can also launch the project with an IDE like Visual Studio Code (make sure to reference the JavaFX library if you are running a different OS than Windows).
 
 ## Project Structure
 ### Main program
